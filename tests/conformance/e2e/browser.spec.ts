@@ -130,6 +130,23 @@ for (const mode of MODES) {
         await expect(counter.locator('.value')).toHaveText('9');
       });
 
+      test('nested scoped components keep their slotted text after hydration', async ({ page }) => {
+        // demo-task-list (shadow) renders demo-badge (scoped) with slotted text. A hydration race
+        // used to delete that text on some loads, so check several.
+        for (let i = 0; i < 5; i++) {
+          await page.goto(mode.path);
+          await waitForClientHydration(page);
+          await page.evaluate(() =>
+            Promise.all(
+              [...document.querySelector('demo-task-list')!.shadowRoot!.querySelectorAll('demo-badge')].map((el) =>
+                (el as any).componentOnReady(),
+              ),
+            ),
+          );
+          await expect(page.locator('demo-task-list demo-badge')).toHaveText(['done', 'todo', 'todo']);
+        }
+      });
+
       test('complex prop is still correct after hydration', async ({ page }) => {
         await page.goto(mode.path);
         await waitForClientHydration(page);

@@ -22,6 +22,19 @@ using that language's popular web framework:
 | [`examples/java-spring`](examples/java-spring) | Java | Spring Boot + Thymeleaf | `org.extism.sdk:extism` (JNA) | 8006 |
 | [`examples/dotnet-aspnet`](examples/dotnet-aspnet) | C# | ASP.NET Core (Razor Pages) | `Extism.Sdk` | 8007 |
 
+### Screenshots
+
+Each example's `/` page, server-rendered by that language and hydrated in the browser. Click one
+to open the example. `scripts/screenshots.mjs` takes them, and only saves a screenshot once every
+component, including those inside shadow roots, has hydrated correctly.
+
+| | |
+|---|---|
+| [![PHP / Laravel](docs/screenshots/php-laravel.png)](examples/php-laravel)<br>PHP / Laravel | [![Python / Django](docs/screenshots/python-django.png)](examples/python-django)<br>Python / Django |
+| [![Ruby / Rails](docs/screenshots/ruby-rails.png)](examples/ruby-rails)<br>Ruby / Rails | [![Go / net/http](docs/screenshots/go-nethttp.png)](examples/go-nethttp)<br>Go / `net/http` |
+| [![Rust / Axum](docs/screenshots/rust-axum.png)](examples/rust-axum)<br>Rust / Axum | [![Java / Spring Boot](docs/screenshots/java-spring.png)](examples/java-spring)<br>Java / Spring Boot |
+| [![C# / ASP.NET Core](docs/screenshots/dotnet-aspnet.png)](examples/dotnet-aspnet)<br>C# / ASP.NET Core | |
+
 ## Layout
 
 ```

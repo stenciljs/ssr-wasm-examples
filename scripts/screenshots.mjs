@@ -32,11 +32,19 @@ try {
         [...document.querySelectorAll(t)].every((el) => typeof el.componentOnReady === 'function'),
       ),
     );
-    await page.evaluate(() =>
-      Promise.all([...document.querySelectorAll('[s-id], demo-notice, demo-card, demo-counter, demo-task-list, demo-badge')]
-        .filter((el) => typeof el.componentOnReady === 'function')
-        .map((el) => el.componentOnReady())),
-    );
+    // every component, including the ones inside shadow roots (demo-task-list's badges)
+    await page.evaluate(() => {
+      const all = (root) =>
+        [...root.querySelectorAll('*')].flatMap((el) => [el, ...(el.shadowRoot ? all(el.shadowRoot) : [])]);
+      return Promise.all(
+        all(document)
+          .filter((el) => el.tagName.startsWith('DEMO-') && typeof el.componentOnReady === 'function')
+          .map((el) => el.componentOnReady()),
+      );
+    });
+    // don't publish a screenshot of a broken render
+    const badges = await page.locator('demo-task-list demo-badge').allTextContents();
+    if (badges.join() !== 'done,todo,todo') throw new Error(`${name}: task badges rendered as ${JSON.stringify(badges)}`);
     const file = path.join(outDir, `${name}.png`);
     await page.locator('main').screenshot({ path: file });
     console.log(`${name}: ${path.relative(root, file)}`);

@@ -7,7 +7,7 @@
     "build": "PATH=\"$HOME/.local/bin:$PATH\" stencil build"
   },
   "devDependencies": {
-    "@stencil/core": "5.0.0-beta.33"
+    "@stencil/core": "5.0.0-beta.34"
   },
   "module": "./dist/loader-bundle/esm/loader.js",
   "types": "./dist/types/loader.d.ts",
