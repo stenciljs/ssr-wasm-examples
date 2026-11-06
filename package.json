@@ -5,8 +5,6 @@
   "packageManager": "pnpm@9.14.0",
   "scripts": {
     "build": "pnpm --filter @ssr-wasm-examples/components build",
-    "link:core": "node scripts/link-core.mjs",
-    "unlink:core": "node scripts/link-core.mjs --unlink",
     "test": "pnpm --filter @ssr-wasm-examples/conformance test"
   }
 }

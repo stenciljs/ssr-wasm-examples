@@ -191,21 +191,22 @@ cd tests/conformance && BASE_URL=http://localhost:8005 npx playwright test
 
 ## Timings
 
-Measured in Docker Desktop on an x86_64 Mac limited to **1 CPU**, with other containers building at
-the same time, so treat the numbers as rough. Startup timings come from the server's startup log;
-render timings from `Server-Timing` over 25 sequential requests.
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs.
 
 | | |
 |---|---|
 | Compile (`CompiledPlugin::new`), no cache | 2.1-3.6 s |
 | Compile, wasmtime cache warm (the image) | 70-100 ms |
 | Instantiate one instance, including its first call | 0.4-4 ms |
-| Render `/` (middleware, whole document) | ~45 ms median (37-120 ms) |
-| Render `/helper` (reset + 4 fragments) | ~63 ms median (52-135 ms) |
+| Render `/` (middleware, whole document) | ~56 ms (~58 ms end to end) |
+| Render `/helper` (reset + 4 fragments) | ~75 ms (~77 ms end to end) |
 | Memory, idle, pool of 1 / pool of 4 after 16 concurrent requests | ~17-20 MB / ~30 MB |
 | Dependency build (Docker, one CPU) | ~25 min |
 
-That's about three times faster per render than the Go example on wazero, on the same machine.
+That's two to three times faster per render than the Go example on wazero, in the same VM.
 The plugin is mostly QuickJS interpreting the components, and Cranelift's code for the QuickJS
 interpreter is the difference.
 

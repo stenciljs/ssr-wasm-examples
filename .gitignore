@@ -5,10 +5,13 @@ www/
 *.log
 .DS_Store
 
-# example runtime artifacts (copied in from packages/components/dist by scripts/sync-dist)
+# example runtime artifacts (copies of packages/components/dist when running an example natively)
 examples/*/stencil-dist/
 examples/*/public/stencil/
 
 # playwright
 test-results/
 playwright-report/
+
+# local-only helpers
+scripts/link-core.mjs

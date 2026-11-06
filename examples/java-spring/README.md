@@ -27,8 +27,8 @@ Java has two Extism SDKs:
 - [`org.extism.sdk:extism`](https://github.com/extism/java-sdk): JNA bindings to `libextism`,
   the Rust runtime on wasmtime (a Cranelift JIT). Needs the native library in the image.
 
-Pure JVM would be nicer to deploy, so it was measured first. Same page, same machine (x86_64 Mac,
-12 cores, JDK 17, steady state after 15-60 renders):
+Pure JVM would be nicer to deploy, so it was measured first. Same page, same hardware (12-core x86_64,
+JDK 17, steady state after 15-60 renders):
 
 | | Instantiate | Render `/` (whole document) | Render one fragment (`demo-card`) |
 |---|---|---|---|
@@ -234,18 +234,19 @@ cd tests/conformance && BASE_URL=http://localhost:8006 npx playwright test
 
 ## Timings
 
-Measured in Docker Desktop on an x86_64 Mac limited to **1 CPU**, with other containers building at
-the same time, so treat the numbers as rough. Startup timings come from the server's startup log;
-render timings from `Server-Timing` over 40 sequential requests per page (after the first few).
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs.
 
 | | |
 |---|---|
-| Startup to "Started", with the AOT cache / without | ~3.0-3.4 s / ~5.8-6.6 s (15 s under heavy load) |
+| Startup to "Started", with the AOT cache / without | ~3.0-3.4 s / ~5.8-6.6 s |
 | Compile the module (first instance, wasmtime cache empty) | ~3.5 s |
 | Instantiate one instance, wasmtime cache warm, incl. first-call init | 130-300 ms |
-| Render `/` (middleware, whole document), p50 | ~50 ms (min 45, p90 58); ~100 ms when the other builds were busy |
-| Render `/helper` (reset + 4 fragments), p50 | ~75 ms (min 67, p90 85); ~155 ms when busy |
-| End to end `/` / `/helper`, p50 | ~65 ms / ~90 ms |
+| Render `/` (middleware, whole document) | ~80 ms |
+| Render `/helper` (reset + 4 fragments) | ~80 ms |
+| End to end `/` / `/helper` | ~98 ms / ~92 ms |
 | First request after startup | ~0.8 s (class loading, JIT) |
 | Memory, idle, pool of 1 / pool of 4 | ~136 MB / ~200 MB (~150 MB / ~220 MB after some requests) |
 

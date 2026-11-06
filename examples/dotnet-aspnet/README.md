@@ -174,24 +174,25 @@ cd tests/conformance && BASE_URL=http://localhost:8007 npx playwright test
 
 ## Timings
 
-Measured in Docker Desktop on an x86_64 Mac limited to **1 CPU**, with other containers building at
-the same time, so treat the numbers as rough. Startup timings come from the server's startup log;
-render timings from `Server-Timing` over 25 sequential requests.
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs.
 
 | | |
 |---|---|
 | Compile (`new CompiledPlugin`), cold wasmtime cache | 2.4-7 s |
 | Compile, wasmtime cache warm (as in the image) | 95-460 ms |
 | Instantiate one instance, including its first call | 5-20 ms |
-| Render `/` (middleware, whole document) | p50 ~42 ms (min 40) |
-| Render `/helper` (reset + 4 fragments) | p50 ~61 ms (min 57) |
+| Render `/` (middleware, whole document) | ~55 ms (~58 ms end to end) |
+| Render `/helper` (reset + 4 fragments) | ~80 ms (~84 ms end to end) |
 | `docker run` to first `/health` response | ~2 s |
 | Memory, pool of 1: idle / after requests | ~41 MB / ~53 MB |
 | Memory, pool of 4: idle / after 16 concurrent requests | ~48 MB / ~68 MB |
 
 wasmtime (Cranelift) runs QuickJS a few times faster than the Go example's wazero, so renders are
-in the same range as the Node reference server. The cost moves to compilation: Cranelift takes
-seconds to compile the ~6.5 MB module on one busy CPU, which is why the image compiles it once at
+much faster than the Go example's. The cost moves to compilation: Cranelift takes
+seconds to compile the ~6.5 MB module on one CPU, which is why the image compiles it once at
 build time (below).
 
 ### The wasmtime cache

@@ -124,16 +124,18 @@ Two smaller SDK details: `Plugin#call` returns the output as a binary (`ASCII-8B
 
 ## Timings
 
-Measured in Docker (production mode, single Puma process, 3 threads) on a 1-CPU / 2.4 GB Docker
-VM on an x86_64 Mac, which other image builds were sharing at the time, so treat these as rough:
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs. The server ran in production mode: one Puma process, 3 threads.
 
 | | |
 |---|---|
 | Compile the plugin (once per process, at boot) | ~6.7-7.4 s |
 | Instantiate from the compiled plugin (per pool slot) | 5-9 ms |
 | `Extism::Plugin.new` instead (compile + instantiate, per instance) | ~7.4 s |
-| `GET /`: one whole-document `renderToString` | 125-200 ms (response 145-235 ms) |
-| `GET /helper`: four fragment renders | 26-72 ms each, ~170-240 ms total (response 170-450 ms) |
+| `GET /`: one whole-document `renderToString` | ~55 ms end to end |
+| `GET /helper`: four fragment renders | ~70 ms end to end |
 | Memory, `WEB_CONCURRENCY=2` after the conformance suite | ~265 MiB in total |
 
 Start with `RAILS_LOG_LEVEL=debug` to log the time of every `renderToString` call.

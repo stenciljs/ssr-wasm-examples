@@ -108,16 +108,16 @@ Then, from `tests/conformance`: `BASE_URL=http://localhost:8002 pnpm test`.
 
 ## Timings
 
-Measured from the `Server-Timing` header and the app's log lines, over 40 sequential requests
-per page. These are wall-clock plugin times, so they include Python's JSON encoding.
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs. Render times are wall-clock plugin times from `Server-Timing`, so they include
+Python's JSON encoding.
 
-| | macOS x86_64, native | Docker (linux/amd64, 1 CPU, load avg ≈ 7–10 from parallel builds) |
+| | Native | Docker (1 CPU) |
 |---|---|---|
-| Compile module (`CompiledPlugin`), once per worker | ~580 ms cold, ~90–110 ms with warm wasmtime cache | **~16 s cold**, 0.3–1.1 s with the cache warmed at build time |
+| Compile module (`CompiledPlugin`), once per worker | ~580 ms cold, ~90–110 ms with warm wasmtime cache | several seconds cold, 0.3–1.1 s with the cache warmed at build time |
 | Instantiate plugin, once per thread | ~5 ms (+ ~5 ms first-call init) | 0.4–50 ms |
-| Render `/` (one full-document call), p50 | 35 ms (p90 39) | 350 ms (min 170) |
-| Render `/helper` (four fragment calls), p50 | 50 ms (p90 54) | 700 ms (min 580) |
+| Render `/` (one full-document call) | ~35 ms | ~41 ms (~45 ms end to end) |
+| Render `/helper` (four fragment calls) | ~50 ms | ~70 ms (~73 ms end to end) |
 
-For comparison, the Node reference server (Extism JS SDK) on the same host takes about 23 ms for
-`/` and 34 ms for `/helper` (end-to-end, p50). The Docker numbers mostly show CPU contention on
-a shared 1-CPU VM, not the plugin itself.

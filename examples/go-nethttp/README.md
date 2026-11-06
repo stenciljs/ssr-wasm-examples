@@ -134,23 +134,23 @@ cd tests/conformance && BASE_URL=http://localhost:8004 npx playwright test
 
 ## Timings
 
-Measured in Docker Desktop on an x86_64 Mac limited to **1 CPU**, with other containers building at
-the same time, so treat the numbers as rough. Startup timings come from the server's startup log;
-render timings from `Server-Timing` over 20-30 sequential requests.
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs.
 
 | | |
 |---|---|
 | Compile (`NewCompiledPlugin`), no cache | 0.8-2.0 s |
 | Compile, wazero cache warm | 80-160 ms |
 | Instantiate one instance, including its first call | 3-8 ms |
-| Render `/` (middleware, whole document) | ~150-200 ms |
-| Render `/helper` (reset + 4 fragments) | ~200-250 ms |
+| Render `/` (middleware, whole document) | ~150 ms |
+| Render `/helper` (reset + 4 fragments) | ~260 ms |
 | `BenchmarkRenderFragment` (`demo-card` + badge) | ~55-75 ms |
 | Memory, idle, pool of 1 / pool of 4 | ~45 MB / ~46 MB RSS |
 
-Compared with the Node reference server on the same machine (Extism's JS SDK on V8, run on the
-host rather than in the 1-CPU VM), which serves `/` in about 30 ms, wazero is noticeably slower
-per render. The plugin is mostly QuickJS interpreting the components, so the time is in
+The examples whose SDKs run on wasmtime render `/` in about 40-60 ms in the same VM, so wazero is
+noticeably slower per render. The plugin is mostly QuickJS interpreting the components, so the time is in
 interpreting JavaScript inside wasm. Bumping wazero from 1.9.0 (the version the Extism SDK pins)
 to 1.12.0 made no difference that showed above the noise, so the example stays on 1.9.0.
 

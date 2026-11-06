@@ -29,9 +29,6 @@ browser.** No client-side code ran: everything you see, including the shadow DOM
 their styles, is the HTML that language's server sent. When JavaScript is on, the client bundle
 hydrates that same markup. The conformance suite checks that hydration separately.
 
-Click a screenshot to open its example. `scripts/screenshots.mjs` takes them, and refuses to save
-one if the components didn't render correctly.
-
 | | |
 |---|---|
 | [![PHP / Laravel](docs/screenshots/php-laravel.png)](examples/php-laravel)<br>PHP / Laravel · server-rendered, JavaScript off | [![Python / Django](docs/screenshots/python-django.png)](examples/python-django)<br>Python / Django · server-rendered, JavaScript off |
@@ -117,15 +114,27 @@ BASE_URL=http://localhost:8003 pnpm test    # against a running example
 ALL_BROWSERS=1 BASE_URL=... pnpm test       # also Firefox and WebKit
 ```
 
-## Testing against a local Stencil core
+## Render times
 
-The repo is also a testbed for `@stencil/core`. To build against a local checkout:
+Median time to render each page, from 30 sequential requests on a warm server, in a small Docker
+VM (1 CPU, ~2.5 GB). "Plugin" is the time spent in `renderToString`, from the example's
+`Server-Timing` header, where it sends one. "End to end" is the whole HTTP response. Treat these as
+rough and relative: absolute numbers depend on the hardware.
 
-```sh
-pnpm link:core      # uses $STENCIL_CORE_PATH, default ../../stenciljs/packages/core
-pnpm build          # rebuild components with it (build core first: `pnpm build` in packages/core)
-pnpm unlink:core    # back to the published version
-```
+| Example | Extism runtime | `/` plugin | `/` end to end | `/helper` plugin | `/helper` end to end |
+|---|---|---|---|---|---|
+| PHP / Laravel | wasmtime | | 53 ms | | 78 ms |
+| Python / Django | wasmtime | 41 ms | 45 ms | 70 ms | 73 ms |
+| Ruby / Rails | wasmtime | | 55 ms | | 70 ms |
+| Go / `net/http` | wazero | 149 ms | 151 ms | 260 ms | 263 ms |
+| Rust / Axum | wasmtime | 56 ms | 58 ms | 75 ms | 77 ms |
+| Java / Spring Boot | wasmtime | 80 ms | 98 ms | 79 ms | 92 ms |
+| C# / ASP.NET Core | wasmtime | 55 ms | 58 ms | 80 ms | 84 ms |
+
+The plugin spends most of its time in QuickJS, interpreting the components' JavaScript. That's
+why the runtime matters more than the host language: every SDK except Go's runs the plugin on
+wasmtime, whose Cranelift compiler produces faster code for the QuickJS interpreter than wazero
+does.
 
 ## Things to know about `ssr-wasm`
 

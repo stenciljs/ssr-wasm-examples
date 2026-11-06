@@ -70,16 +70,18 @@ for one request, which gives per-request instantiation. It works correctly, just
 
 ## Timings
 
-Measured in the Docker image on a 1 CPU / 2.6 GB Docker VM (macOS x86_64 host). Each row is the
-median of 15–30 sequential requests on a warm server.
+Rough numbers from a small Docker VM (1 CPU, ~2.5 GB). Render times are medians of 30 sequential
+requests on a warm server, measured the same way for every example (see
+[Render times](../../README.md#render-times) in the root README). Startup numbers come from the
+server's logs.
 
 | What | Time |
 |---|---|
 | Compile plugin (wasmtime cache cold, done once at `docker build`) | 5.8–9.9 s |
 | Instantiate plugin (cache warm; once per Octane worker) | ~160 ms |
 | `GET /health`, Laravel baseline with no rendering (Octane) | 5 ms |
-| **`GET /`**, Octane (1 whole-document `renderToString`) | **55 ms** |
-| **`GET /helper`**, Octane (4 fragment `renderToString` calls) | **72 ms** |
+| **`GET /`**, Octane (1 whole-document `renderToString`) | **~53 ms** |
+| **`GET /helper`**, Octane (4 fragment `renderToString` calls) | **~78 ms** |
 | `GET /` without Octane (`php artisan serve`, plugin instantiated per request) | 147 ms |
 | `GET /helper` without Octane (plugin instantiated per request) | ~360 ms |
 
