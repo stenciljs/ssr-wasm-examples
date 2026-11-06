@@ -184,8 +184,8 @@ server's logs.
 | Compile (`new CompiledPlugin`), cold wasmtime cache | 2.4-7 s |
 | Compile, wasmtime cache warm (as in the image) | 95-460 ms |
 | Instantiate one instance, including its first call | 5-20 ms |
-| Render `/` (middleware, whole document) | ~55 ms (~58 ms end to end) |
-| Render `/helper` (reset + 4 fragments) | ~80 ms (~84 ms end to end) |
+| Render `/` (middleware, whole document) | ~36 ms (~38 ms end to end) |
+| Render `/helper` (reset + 4 fragments) | ~47 ms (~51 ms end to end) |
 | `docker run` to first `/health` response | ~2 s |
 | Memory, pool of 1: idle / after requests | ~41 MB / ~53 MB |
 | Memory, pool of 4: idle / after 16 concurrent requests | ~48 MB / ~68 MB |

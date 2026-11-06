@@ -144,12 +144,12 @@ server's logs.
 | Compile (`NewCompiledPlugin`), no cache | 0.8-2.0 s |
 | Compile, wazero cache warm | 80-160 ms |
 | Instantiate one instance, including its first call | 3-8 ms |
-| Render `/` (middleware, whole document) | ~150 ms |
-| Render `/helper` (reset + 4 fragments) | ~260 ms |
+| Render `/` (middleware, whole document) | ~133 ms |
+| Render `/helper` (reset + 4 fragments) | ~162 ms |
 | `BenchmarkRenderFragment` (`demo-card` + badge) | ~55-75 ms |
 | Memory, idle, pool of 1 / pool of 4 | ~45 MB / ~46 MB RSS |
 
-The examples whose SDKs run on wasmtime render `/` in about 40-60 ms in the same VM, so wazero is
+The examples whose SDKs run on wasmtime render `/` in about 35-60 ms in the same VM, so wazero is
 noticeably slower per render. The plugin is mostly QuickJS interpreting the components, so the time is in
 interpreting JavaScript inside wasm. Bumping wazero from 1.9.0 (the version the Extism SDK pins)
 to 1.12.0 made no difference that showed above the noise, so the example stays on 1.9.0.

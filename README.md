@@ -119,17 +119,20 @@ ALL_BROWSERS=1 BASE_URL=... pnpm test       # also Firefox and WebKit
 Median time to render each page, from 30 sequential requests on a warm server, in a small Docker
 VM (1 CPU, ~2.5 GB). "Plugin" is the time spent in `renderToString`, from the example's
 `Server-Timing` header, where it sends one. "End to end" is the whole HTTP response. Treat these as
-rough and relative: absolute numbers depend on the hardware.
+rough and relative: absolute numbers depend on the hardware. Measured with `@stencil/core`
+5.0.0-beta.35, where the plugin reuses one render window across calls
+([`reuseWindow`](https://stenciljs.com/docs/ssr#reusewindow)), so each call skips setting up
+Stencil's runtime again.
 
 | Example | Extism runtime | `/` plugin | `/` end to end | `/helper` plugin | `/helper` end to end |
 |---|---|---|---|---|---|
-| PHP / Laravel | wasmtime | | 53 ms | | 78 ms |
-| Python / Django | wasmtime | 41 ms | 45 ms | 70 ms | 73 ms |
-| Ruby / Rails | wasmtime | | 55 ms | | 70 ms |
-| Go / `net/http` | wazero | 149 ms | 151 ms | 260 ms | 263 ms |
-| Rust / Axum | wasmtime | 56 ms | 58 ms | 75 ms | 77 ms |
-| Java / Spring Boot | wasmtime | 80 ms | 98 ms | 79 ms | 92 ms |
-| C# / ASP.NET Core | wasmtime | 55 ms | 58 ms | 80 ms | 84 ms |
+| PHP / Laravel | wasmtime | | 46 ms | | 59 ms |
+| Python / Django | wasmtime | 40 ms | 42 ms | 50 ms | 53 ms |
+| Ruby / Rails | wasmtime | | 45 ms | | 57 ms |
+| Go / `net/http` | wazero | 133 ms | 135 ms | 162 ms | 164 ms |
+| Rust / Axum | wasmtime | 36 ms | 38 ms | 42 ms | 44 ms |
+| Java / Spring Boot | wasmtime | 47 ms | 58 ms | 56 ms | 71 ms |
+| C# / ASP.NET Core | wasmtime | 36 ms | 38 ms | 47 ms | 51 ms |
 
 The plugin spends most of its time in QuickJS, interpreting the components' JavaScript. That's
 why the runtime matters more than the host language: every SDK except Go's runs the plugin on

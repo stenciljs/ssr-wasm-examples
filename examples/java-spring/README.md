@@ -244,9 +244,9 @@ server's logs.
 | Startup to "Started", with the AOT cache / without | ~3.0-3.4 s / ~5.8-6.6 s |
 | Compile the module (first instance, wasmtime cache empty) | ~3.5 s |
 | Instantiate one instance, wasmtime cache warm, incl. first-call init | 130-300 ms |
-| Render `/` (middleware, whole document) | ~80 ms |
-| Render `/helper` (reset + 4 fragments) | ~80 ms |
-| End to end `/` / `/helper` | ~98 ms / ~92 ms |
+| Render `/` (middleware, whole document) | ~47 ms |
+| Render `/helper` (reset + 4 fragments) | ~56 ms |
+| End to end `/` / `/helper` | ~58 ms / ~71 ms |
 | First request after startup | ~0.8 s (class loading, JIT) |
 | Memory, idle, pool of 1 / pool of 4 | ~136 MB / ~200 MB (~150 MB / ~220 MB after some requests) |
 

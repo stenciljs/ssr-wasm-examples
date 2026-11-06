@@ -134,8 +134,8 @@ server's logs. The server ran in production mode: one Puma process, 3 threads.
 | Compile the plugin (once per process, at boot) | ~6.7-7.4 s |
 | Instantiate from the compiled plugin (per pool slot) | 5-9 ms |
 | `Extism::Plugin.new` instead (compile + instantiate, per instance) | ~7.4 s |
-| `GET /`: one whole-document `renderToString` | ~55 ms end to end |
-| `GET /helper`: four fragment renders | ~70 ms end to end |
+| `GET /`: one whole-document `renderToString` | ~45 ms end to end |
+| `GET /helper`: four fragment renders | ~57 ms end to end |
 | Memory, `WEB_CONCURRENCY=2` after the conformance suite | ~265 MiB in total |
 
 Start with `RAILS_LOG_LEVEL=debug` to log the time of every `renderToString` call.

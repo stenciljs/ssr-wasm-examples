@@ -118,6 +118,6 @@ Python's JSON encoding.
 |---|---|---|
 | Compile module (`CompiledPlugin`), once per worker | ~580 ms cold, ~90–110 ms with warm wasmtime cache | several seconds cold, 0.3–1.1 s with the cache warmed at build time |
 | Instantiate plugin, once per thread | ~5 ms (+ ~5 ms first-call init) | 0.4–50 ms |
-| Render `/` (one full-document call) | ~35 ms | ~41 ms (~45 ms end to end) |
-| Render `/helper` (four fragment calls) | ~50 ms | ~70 ms (~73 ms end to end) |
+| Render `/` (one full-document call) | ~35 ms | ~40 ms (~42 ms end to end) |
+| Render `/helper` (four fragment calls) | ~50 ms | ~50 ms (~53 ms end to end) |
 

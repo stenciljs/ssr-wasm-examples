@@ -11,8 +11,8 @@ importers:
   packages/components:
     devDependencies:
       '@stencil/core':
-        specifier: 5.0.0-beta.34
-        version: 5.0.0-beta.34(rollup@4.67.5)
+        specifier: 5.0.0-beta.35
+        version: 5.0.0-beta.35(rollup@4.67.5)
 
   tests/conformance:
     devDependencies:
@@ -563,33 +563,33 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@stencil/cli@5.0.0-beta.34':
-    resolution: {integrity: sha512-W9fF3+e/udiCDLlUbk0GYDd4TE+FB6Ur2k0k49n9sVa3XeB0W0a1u/rNES9AHl/7STtA3jYXNZ+rf3Dk3rjs8w==}
+  '@stencil/cli@5.0.0-beta.35':
+    resolution: {integrity: sha512-IRrS2W0rVrtClIOzmPMnqJTHEErldGr2MlMRA1e2alg5em+frbu06GpV5pvJ/u+nSTW4eXsPx7BOcRctuE6iIw==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
-      '@stencil/core': ^5.0.0 || 5.0.0-beta.34
+      '@stencil/core': ^5.0.0 || 5.0.0-beta.35
 
-  '@stencil/core@5.0.0-beta.34':
-    resolution: {integrity: sha512-K25wwfCl9xSSfWJExZs8YWRzHmIarmyaopxZFasKYZ1X7mny1iH2nucdlfz93O3Qk4ThInDtQfj5vvdGjhvmiQ==}
+  '@stencil/core@5.0.0-beta.35':
+    resolution: {integrity: sha512-9ud+0l6Nvh+EYV63UuvH6/SQpld4pIkUlmb9hyUrAEyDaGgPVCJ9dKMFqu6wqBayEZl7CVbj+MKSpzCLMb1I8g==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
-  '@stencil/dev-server@5.0.0-beta.34':
-    resolution: {integrity: sha512-Vo7r7zA1ss4Vm2MZRkNRagL8/MPkD7+p0wuWAo0DuzL4nb7UQI4O3PpZa/ERvanXu8JFO4eAweq0f7JW/UP8MQ==}
+  '@stencil/dev-server@5.0.0-beta.35':
+    resolution: {integrity: sha512-DizrkdHlKN7bwoMMO6vycdixPt6af1kmTlISkvhTdtVBf1IGPra9JMegGusr26gMngEOHMf4BQVXinQBCgrR7A==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
-      '@stencil/core': ^5.0.0 || 5.0.0-beta.34
+      '@stencil/core': ^5.0.0 || 5.0.0-beta.35
 
-  '@stencil/mock-doc@5.0.0-beta.34':
-    resolution: {integrity: sha512-ZZ65OKrmMlIMrx1kyqp9RDLJFFSqBPIgVCI4FMaw3g7pySjNmtFZTgGULs3C4y0in+fpvDz9PIocZwBX6dxh+Q==}
+  '@stencil/mock-doc@5.0.0-beta.35':
+    resolution: {integrity: sha512-52zx/2CcsJwFzINhd6hrAdqMrpNZXNU16Ch72aeKwe+OzezFJqoLzrnlWfcWYTTGQr1anlEyxsoxC2aMc9xYvA==}
     engines: {node: '>=22.0.0'}
 
-  '@stencil/templates@5.0.0-beta.34':
-    resolution: {integrity: sha512-LctbPWcdIym5UaUJGRcVpvOZ3Qu2plnREDpUbWSafdrCj9fLW1h8C36IVSxgnlAgqSpQF7KuIGLJo0CMQrPBow==}
+  '@stencil/templates@5.0.0-beta.35':
+    resolution: {integrity: sha512-v0jV1H6k5n/qiL3A1NHsN4ft2q30opMUgpHRK3xAVLxkiYCuyZe0pCkJTX3R3NPzLKh1AwvZNXEPiKH0ZOiZig==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
-      '@stencil/core': ^5.0.0 || 5.0.0-beta.34
+      '@stencil/core': ^5.0.0 || 5.0.0-beta.35
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -1627,12 +1627,12 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.67.5':
     optional: true
 
-  '@stencil/cli@5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))':
+  '@stencil/cli@5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))':
     dependencies:
       '@clack/prompts': 1.8.1
-      '@stencil/core': 5.0.0-beta.34(rollup@4.67.5)
-      '@stencil/dev-server': 5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))
-      '@stencil/templates': 5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))
+      '@stencil/core': 5.0.0-beta.35(rollup@4.67.5)
+      '@stencil/dev-server': 5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))
+      '@stencil/templates': 5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))
       local-pkg: 1.2.1
       nypm: 0.3.12
       std-env: 3.10.0
@@ -1641,14 +1641,14 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@stencil/core@5.0.0-beta.34(rollup@4.67.5)':
+  '@stencil/core@5.0.0-beta.35(rollup@4.67.5)':
     dependencies:
       '@parcel/watcher': 2.6.0
       '@preact/signals-core': 1.14.5
       '@rollup/pluginutils': 5.5.1(rollup@4.67.5)
-      '@stencil/cli': 5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))
-      '@stencil/dev-server': 5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))
-      '@stencil/mock-doc': 5.0.0-beta.34
+      '@stencil/cli': 5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))
+      '@stencil/dev-server': 5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))
+      '@stencil/mock-doc': 5.0.0-beta.35
       browserslist: 4.29.5
       chalk: 5.6.2
       css-what: 7.0.0
@@ -1671,9 +1671,9 @@ snapshots:
       - rollup
       - utf-8-validate
 
-  '@stencil/dev-server@5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))':
+  '@stencil/dev-server@5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))':
     dependencies:
-      '@stencil/core': 5.0.0-beta.34(rollup@4.67.5)
+      '@stencil/core': 5.0.0-beta.35(rollup@4.67.5)
       launch-editor: 2.14.2
       open: 11.0.4
       ws: 8.22.1
@@ -1681,14 +1681,14 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@stencil/mock-doc@5.0.0-beta.34':
+  '@stencil/mock-doc@5.0.0-beta.35':
     dependencies:
       nwsapi: 2.2.28
       parse5: 8.1.0
 
-  '@stencil/templates@5.0.0-beta.34(@stencil/core@5.0.0-beta.34(rollup@4.67.5))':
+  '@stencil/templates@5.0.0-beta.35(@stencil/core@5.0.0-beta.35(rollup@4.67.5))':
     dependencies:
-      '@stencil/core': 5.0.0-beta.34(rollup@4.67.5)
+      '@stencil/core': 5.0.0-beta.35(rollup@4.67.5)
 
   '@tybys/wasm-util@0.10.4':
     dependencies:

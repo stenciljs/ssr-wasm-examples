@@ -80,8 +80,8 @@ server's logs.
 | Compile plugin (wasmtime cache cold, done once at `docker build`) | 5.8–9.9 s |
 | Instantiate plugin (cache warm; once per Octane worker) | ~160 ms |
 | `GET /health`, Laravel baseline with no rendering (Octane) | 5 ms |
-| **`GET /`**, Octane (1 whole-document `renderToString`) | **~53 ms** |
-| **`GET /helper`**, Octane (4 fragment `renderToString` calls) | **~78 ms** |
+| **`GET /`**, Octane (1 whole-document `renderToString`) | **~46 ms** |
+| **`GET /helper`**, Octane (4 fragment `renderToString` calls) | **~59 ms** |
 | `GET /` without Octane (`php artisan serve`, plugin instantiated per request) | 147 ms |
 | `GET /helper` without Octane (plugin instantiated per request) | ~360 ms |
 

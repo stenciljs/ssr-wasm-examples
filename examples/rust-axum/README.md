@@ -201,12 +201,12 @@ server's logs.
 | Compile (`CompiledPlugin::new`), no cache | 2.1-3.6 s |
 | Compile, wasmtime cache warm (the image) | 70-100 ms |
 | Instantiate one instance, including its first call | 0.4-4 ms |
-| Render `/` (middleware, whole document) | ~56 ms (~58 ms end to end) |
-| Render `/helper` (reset + 4 fragments) | ~75 ms (~77 ms end to end) |
+| Render `/` (middleware, whole document) | ~36 ms (~38 ms end to end) |
+| Render `/helper` (reset + 4 fragments) | ~42 ms (~44 ms end to end) |
 | Memory, idle, pool of 1 / pool of 4 after 16 concurrent requests | ~17-20 MB / ~30 MB |
 | Dependency build (Docker, one CPU) | ~25 min |
 
-That's two to three times faster per render than the Go example on wazero, in the same VM.
+That's three to four times faster per render than the Go example on wazero, in the same VM.
 The plugin is mostly QuickJS interpreting the components, and Cranelift's code for the QuickJS
 interpreter is the difference.
 
