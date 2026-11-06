@@ -1,0 +1,14 @@
+{{/*
+  GET /helper - helper mode. `stencil` renders one component template as a fragment
+  ({"fullDocument": false}) with the request's plugin handle and inlines the result.
+  The layout itself is never passed to the plugin.
+*/}}
+{{define "main"}}
+      {{stencil .SSR "demo-notice" .}}
+
+      {{stencil .SSR "demo-card" .}}
+
+      {{stencil .SSR "demo-counter" .}}
+
+      {{stencil .SSR "demo-task-list" .}}
+{{- end}}

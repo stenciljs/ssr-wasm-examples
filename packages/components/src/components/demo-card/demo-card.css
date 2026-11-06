@@ -1,0 +1,29 @@
+:host {
+  display: block;
+  --demo-card-accent: #5851ff;
+}
+:host([variant='highlight']) {
+  --demo-card-accent: #ff6b35;
+}
+.card {
+  border: 1px solid #ddd;
+  border-left: 4px solid var(--demo-card-accent);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  background: #fff;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  color: var(--demo-card-accent);
+}
+footer {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #666;
+}

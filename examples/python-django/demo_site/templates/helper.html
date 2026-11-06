@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load stencil %}
+{% comment %}
+  Helper mode: each top-level component is rendered as a fragment by {% stencil %}.
+  demo-badge is slotted content of demo-card, so it's rendered as part of that call.
+{% endcomment %}
+{% block components %}
+      {% stencil %}{% include "components/notice.html" %}{% endstencil %}
+
+      {% stencil %}{% include "components/card.html" %}{% endstencil %}
+
+      {% stencil %}{% include "components/counter.html" %}{% endstencil %}
+
+      {% stencil %}{% include "components/task_list.html" %}{% endstencil %}
+{% endblock %}

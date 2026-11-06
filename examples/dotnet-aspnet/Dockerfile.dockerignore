@@ -1,0 +1,10 @@
+# BuildKit reads <Dockerfile>.dockerignore in place of the root .dockerignore, so this only
+# applies to this example's build. The context is the repo root; send only what's copied.
+*
+!examples/dotnet-aspnet/
+!packages/components/dist/ssr-wasm/index.wasm
+!packages/components/dist/loader-bundle/demo-components/
+examples/dotnet-aspnet/README.md
+examples/dotnet-aspnet/Dockerfile*
+examples/dotnet-aspnet/bin/
+examples/dotnet-aspnet/obj/

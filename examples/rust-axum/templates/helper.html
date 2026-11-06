@@ -1,0 +1,15 @@
+{#-
+  GET /helper - helper mode. The `stencil` filter renders the markup of its block as a fragment
+  ({"fullDocument": false}) with the request's plugin handle and inlines the result.
+  The layout itself is never passed to the plugin.
+-#}
+{% extends "layout.html" %}
+{% block main %}
+      {% filter stencil %}{% include "components/demo-notice.html" %}{% endfilter %}
+
+      {% filter stencil %}{% include "components/demo-card.html" %}{% endfilter %}
+
+      {% filter stencil %}{% include "components/demo-counter.html" %}{% endfilter %}
+
+      {% filter stencil %}{% include "components/demo-task-list.html" %}{% endfilter %}
+{%- endblock %}

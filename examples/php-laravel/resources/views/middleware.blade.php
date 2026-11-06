@@ -1,0 +1,17 @@
+{{-- Middleware mode: plain component tags. RenderStencilComponents renders the whole response. --}}
+@extends('layouts.app')
+
+@section('components')
+      <demo-notice kind="info">Rendered by {{ $framework }}.</demo-notice>
+
+      <demo-card heading="Server-rendered card" variant="highlight">
+        <span slot="icon">★</span>
+        <p>This card was rendered on the server as Declarative Shadow DOM.</p>
+        <demo-badge tone="success">SSR</demo-badge>
+        <span slot="footer">Footer slot</span>
+      </demo-card>
+
+      <demo-counter start="5" step="2"></demo-counter>
+
+      <demo-task-list tasks="{{ json_encode($tasks) }}"></demo-task-list>
+@endsection

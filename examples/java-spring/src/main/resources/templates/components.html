@@ -1,0 +1,20 @@
+<!--/*
+  The component markup, one Thymeleaf fragment per top-level component. Values are escaped by
+  Thymeleaf for where they land, so the task JSON in demo-task-list's attribute is escaped by
+  the template engine (th:attr), not by hand.
+
+  Middleware mode includes them with th:replace; helper mode renders each one through
+  ssr:render, which processes the fragment and passes the result to the plugin.
+*/-->
+<demo-notice th:fragment="demo-notice" kind="info">Rendered by [[${framework}]].</demo-notice>
+
+<demo-card th:fragment="demo-card" heading="Server-rendered card" variant="highlight">
+  <span slot="icon">★</span>
+  <p>This card was rendered on the server as Declarative Shadow DOM.</p>
+  <demo-badge tone="success">SSR</demo-badge>
+  <span slot="footer">Footer slot</span>
+</demo-card>
+
+<demo-counter th:fragment="demo-counter" start="5" step="2"></demo-counter>
+
+<demo-task-list th:fragment="demo-task-list" th:attr="tasks=${tasksJson}"></demo-task-list>

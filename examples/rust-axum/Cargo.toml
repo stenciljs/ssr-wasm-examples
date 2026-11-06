@@ -1,0 +1,28 @@
+[package]
+name = "rust-axum"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96"
+publish = false
+description = "Stencil ssr-wasm example: server-rendering Stencil components from Rust + Axum via Extism"
+
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = "0.8.9"
+# The Extism host SDK (wasmtime). The default features also pull in an HTTP client for plugins
+# that call `http_request`; the ssr-wasm plugin doesn't, so leave it out.
+extism = { version = "1.41.0", default-features = false, features = ["register-filesystem", "wasmtime-default-features"] }
+minijinja = "3.0.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.54", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tower-http = { version = "0.7.1", features = ["fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+
+[profile.release]
+strip = true

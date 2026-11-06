@@ -1,0 +1,16 @@
+{
+  "name": "@ssr-wasm-examples/conformance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run && playwright test",
+    "test:plugin": "vitest run",
+    "test:e2e": "playwright test",
+    "reference-server": "node reference-server.mjs"
+  },
+  "devDependencies": {
+    "@extism/extism": "2.0.0-rc13",
+    "@playwright/test": "^1.49.0",
+    "vitest": "^3.2.4"
+  }
+}

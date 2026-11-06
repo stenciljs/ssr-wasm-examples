@@ -1,0 +1,23 @@
+:host {
+  display: inline-block;
+}
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: ui-monospace, monospace;
+}
+.value {
+  min-width: 2ch;
+  font-size: 1.5rem;
+  text-align: right;
+}
+button {
+  font: inherit;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #5851ff;
+  background: #5851ff;
+  color: #fff;
+  cursor: pointer;
+}

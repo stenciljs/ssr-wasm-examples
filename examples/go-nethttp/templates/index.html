@@ -1,0 +1,10 @@
+{{/* GET / - middleware mode. Plain markup; ssrMiddleware renders the whole response. */}}
+{{define "main"}}
+      {{template "demo-notice" .}}
+
+      {{template "demo-card" .}}
+
+      {{template "demo-counter" .}}
+
+      {{template "demo-task-list" .}}
+{{- end}}

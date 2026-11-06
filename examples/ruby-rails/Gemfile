@@ -1,0 +1,15 @@
+source "https://rubygems.org"
+
+ruby ">= 3.3"
+
+# Just the parts of Rails this app uses: no Active Record, mailers, jobs, storage or asset pipeline.
+gem "railties", "~> 8.1.1"
+gem "actionpack", "~> 8.1.1"
+gem "actionview", "~> 8.1.1"
+
+gem "puma", ">= 6.0"
+
+# Extism host SDK (FFI bindings to libextism, which the Dockerfile installs).
+gem "extism", "~> 1.0"
+# One plugin instance per concurrent request (see lib/stencil_ssr.rb).
+gem "connection_pool", ">= 2.4"

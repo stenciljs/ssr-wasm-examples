@@ -1,0 +1,6 @@
+/vendor/
+/stencil-dist/
+/public/stencil/
+/storage/*.key
+/bootstrap/cache/*.php
+/.env

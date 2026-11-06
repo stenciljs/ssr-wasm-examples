@@ -1,0 +1,15 @@
+@page "/helper"
+@model DemoPageModel
+@*
+  GET /helper - helper mode. Each <stencil> renders one component as a fragment
+  ({"fullDocument": false}) with the request's plugin handle and inlines the result.
+  The layout itself is never passed to the plugin (and the middleware leaves this page alone).
+*@
+
+      <stencil><partial name="_DemoNotice" /></stencil>
+
+      <stencil><partial name="_DemoCard" /></stencil>
+
+      <stencil><partial name="_DemoCounter" /></stencil>
+
+      <stencil><partial name="_DemoTaskList" /></stencil>

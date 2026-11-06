@@ -1,0 +1,17 @@
+<!doctype html>
+<!--/*
+  GET /helper - helper mode. ssr:render (StencilDialect) renders one component fragment with
+  Thymeleaf, passes it to the plugin with {"fullDocument": false} and inlines the result.
+  The layout itself is never passed to the plugin.
+*/-->
+<html th:replace="~{layout :: page(~{::content})}" xmlns:th="http://www.thymeleaf.org" xmlns:ssr="https://stenciljs.com/ssr-wasm">
+<th:block th:fragment="content">
+      <th:block ssr:render="components :: demo-notice"/>
+
+      <th:block ssr:render="components :: demo-card"/>
+
+      <th:block ssr:render="components :: demo-counter"/>
+
+      <th:block ssr:render="components :: demo-task-list"/>
+</th:block>
+</html>

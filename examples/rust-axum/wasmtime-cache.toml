@@ -1,0 +1,4 @@
+# wasmtime compilation cache, used when SSR_CACHE_CONFIG points here (the Docker image does).
+# See https://docs.wasmtime.dev/cli-cache.html. The directory must be absolute and writable.
+[cache]
+directory = "/app/wasmtime-cache"

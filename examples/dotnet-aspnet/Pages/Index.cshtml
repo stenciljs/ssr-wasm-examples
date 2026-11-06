@@ -1,0 +1,14 @@
+@page "/"
+@model DemoPageModel
+@*
+  GET / - middleware mode. Plain markup: StencilSsrMiddleware passes the whole response through
+  renderToString. The component partials are the same ones /helper uses.
+*@
+
+      <partial name="_DemoNotice" />
+
+      <partial name="_DemoCard" />
+
+      <partial name="_DemoCounter" />
+
+      <partial name="_DemoTaskList" />

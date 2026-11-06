@@ -1,0 +1,13 @@
+<!doctype html>
+<!--/* GET / - middleware mode. Plain markup; SsrFilter renders the whole response. */-->
+<html th:replace="~{layout :: page(~{::content})}" xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="content">
+      <demo-notice th:replace="~{components :: demo-notice}"></demo-notice>
+
+      <demo-card th:replace="~{components :: demo-card}"></demo-card>
+
+      <demo-counter th:replace="~{components :: demo-counter}"></demo-counter>
+
+      <demo-task-list th:replace="~{components :: demo-task-list}"></demo-task-list>
+</th:block>
+</html>

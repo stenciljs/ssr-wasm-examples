@@ -1,0 +1,3 @@
+@model DemoPageModel
+@* A plain string: Razor attribute-encodes it (&quot;, &lt;, &amp;...). Nothing is escaped by hand. *@
+<demo-task-list tasks="@Model.TasksJson"></demo-task-list>

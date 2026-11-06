@@ -1,0 +1,14 @@
+node_modules/
+dist/
+www/
+.stencil/
+*.log
+.DS_Store
+
+# example runtime artifacts (copied in from packages/components/dist by scripts/sync-dist)
+examples/*/stencil-dist/
+examples/*/public/stencil/
+
+# playwright
+test-results/
+playwright-report/

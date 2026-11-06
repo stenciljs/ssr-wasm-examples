@@ -1,0 +1,16 @@
+# Example images are built with the repo root as context so they can copy
+# packages/components/dist. Keep everything else out of the context.
+.git
+**/node_modules
+**/.stencil
+packages/components/src
+tests
+
+# per-language build/dependency dirs - images install their own
+**/vendor
+**/.bundle
+**/.venv
+**/__pycache__
+**/tmp
+**/log
+**/target

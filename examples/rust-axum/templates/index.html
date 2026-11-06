@@ -1,0 +1,11 @@
+{#- GET / - middleware mode. Plain markup; ssr_middleware renders the whole response. -#}
+{% extends "layout.html" %}
+{% block main %}
+      {% include "components/demo-notice.html" %}
+
+      {% include "components/demo-card.html" %}
+
+      {% include "components/demo-counter.html" %}
+
+      {% include "components/demo-task-list.html" %}
+{%- endblock %}

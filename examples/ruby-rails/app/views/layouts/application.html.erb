@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title><%= @framework %> · Stencil SSR WASM</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; }
+      main > * { margin-bottom: 1.5rem; }
+      .demo-notice { display: block; padding: .75rem 1rem; border-radius: 6px; background: #eef2ff; }
+      .demo-notice--error { background: #fee2e2; }
+    </style>
+    <script type="module" src="/stencil/demo-components.esm.js"></script>
+  </head>
+  <body>
+    <main>
+      <h1><%= @framework %> + Stencil SSR WASM</h1>
+
+<%= yield %>
+    </main>
+  </body>
+</html>

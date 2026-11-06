@@ -1,0 +1,6 @@
+# Runtime dependencies, pinned. Works with `pip install -r` or `uv pip install -r`.
+Django==6.1.3
+extism==1.1.1          # Extism Python host SDK
+extism-sys==1.41.0     # the native Extism runtime (wasmtime) the SDK binds to via cffi
+gunicorn==26.2.0
+whitenoise==6.12.0

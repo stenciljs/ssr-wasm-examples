@@ -1,0 +1,9 @@
+# BuildKit reads <Dockerfile>.dockerignore in place of the root .dockerignore, so this only
+# applies to this example's build. The context is the repo root; send only what's copied.
+*
+!examples/rust-axum/
+!packages/components/dist/ssr-wasm/index.wasm
+!packages/components/dist/loader-bundle/demo-components/
+examples/rust-axum/target
+examples/rust-axum/README.md
+examples/rust-axum/Dockerfile*
