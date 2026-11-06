@@ -139,6 +139,27 @@ why the runtime matters more than the host language: every SDK except Go's runs 
 wasmtime, whose Cranelift compiler produces faster code for the QuickJS interpreter than wazero
 does.
 
+### How do these numbers compare with Node and the native `ssr` output target?
+
+Node is faster. Here's the same page, rendered by the same component library's native
+[`ssr`](https://stenciljs.com/docs/ssr) output target in Node 22, in the same 1-CPU Docker VM. It's
+render time only, comparable to the "plugin" columns above:
+
+| | `/` | `/helper` |
+|---|---|---|
+| Node, native `ssr` | 9 ms | 9 ms |
+| Node, native `ssr` with [`reuseWindow`](https://stenciljs.com/docs/ssr#reusewindow) | 4 ms | 4 ms |
+| `ssr-wasm` on wasmtime (every example except Go) | 36–47 ms | 42–56 ms |
+| `ssr-wasm` on wazero (Go) | 133 ms | 162 ms |
+
+The plugin runs your components in QuickJS, a JavaScript interpreter compiled to WebAssembly.
+Node runs them on V8, which compiles them to native code. That makes `ssr-wasm` roughly 4–12×
+slower than native SSR on the wasmtime runtimes.
+
+That doesn't make it slow. Around 40–60 ms per page on one small CPU fits normal server-rendering
+budgets, and output can be cached like any other template output. `ssr-wasm` is for servers that
+aren't Node. If your server is Node already, use the `ssr` output target.
+
 ## Things to know about `ssr-wasm`
 
 These come from building the examples, and each example's README covers how it handles them:
