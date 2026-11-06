@@ -21,9 +21,10 @@ works without setting them. The Dockerfiles copy both into the image.
 
 ## Plugin lifecycle
 
-- **Compile once, instantiate per worker.** Creating a plugin instance is expensive (the plugin is about 6 MB
-  of QuickJS + bundled components), and an instance **is not thread-safe**. Keep one
-  instance per worker thread/process, or a pool, and never share one between concurrent requests.
+- **Compile once, instantiate per worker.** Compiling the plugin (about 6.5 MB of QuickJS and
+  bundled components) is expensive; creating instances from the compiled plugin is cheap. An
+  instance **isn't thread-safe**: keep one per worker thread or process, or a pool, and never share
+  one between concurrent requests.
 - **Hydration IDs** (`s-id`, `c-id`, `<!--r.N-->`) only need to be unique within a page.
   - Full-document renders always number them from 1. No reset needed.
   - Fragment renders (`fullDocument: false`) share one sequence in the plugin instance, so the
@@ -119,7 +120,7 @@ includes `<`, `>`, `&` and quotes to check escaping:
 
 | Example | Port |
 |---|---|
-| `tests/conformance` reference server (Node) | 8000 |
+| `tests/conformance` Node implementation of this contract (`pnpm test` starts it) | 8000 |
 | `php-laravel` | 8001 |
 | `python-django` | 8002 |
 | `ruby-rails` | 8003 |

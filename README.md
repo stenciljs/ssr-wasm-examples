@@ -24,24 +24,23 @@ using that language's popular web framework:
 
 ### Screenshots
 
-**Each screenshot below is a purely server-rendered page, with JavaScript disabled in the
-browser.** No client-side code ran: everything you see, including the shadow DOM components and
-their styles, is the HTML that language's server sent. When JavaScript is on, the client bundle
-hydrates that same markup. The conformance suite checks that hydration separately.
+**Taken with JavaScript disabled in the browser:** each one is only the HTML that language's
+server sent, shadow DOM and styles included. With JavaScript on, the client bundle hydrates that
+same markup.
 
 | | |
 |---|---|
-| [![PHP / Laravel](docs/screenshots/php-laravel.png)](examples/php-laravel)<br>PHP / Laravel · server-rendered, JavaScript off | [![Python / Django](docs/screenshots/python-django.png)](examples/python-django)<br>Python / Django · server-rendered, JavaScript off |
-| [![Ruby / Rails](docs/screenshots/ruby-rails.png)](examples/ruby-rails)<br>Ruby / Rails · server-rendered, JavaScript off | [![Go / net/http](docs/screenshots/go-nethttp.png)](examples/go-nethttp)<br>Go / `net/http` · server-rendered, JavaScript off |
-| [![Rust / Axum](docs/screenshots/rust-axum.png)](examples/rust-axum)<br>Rust / Axum · server-rendered, JavaScript off | [![Java / Spring Boot](docs/screenshots/java-spring.png)](examples/java-spring)<br>Java / Spring Boot · server-rendered, JavaScript off |
-| [![C# / ASP.NET Core](docs/screenshots/dotnet-aspnet.png)](examples/dotnet-aspnet)<br>C# / ASP.NET Core · server-rendered, JavaScript off | |
+| [![PHP / Laravel](docs/screenshots/php-laravel.png)](examples/php-laravel)<br>PHP / Laravel | [![Python / Django](docs/screenshots/python-django.png)](examples/python-django)<br>Python / Django |
+| [![Ruby / Rails](docs/screenshots/ruby-rails.png)](examples/ruby-rails)<br>Ruby / Rails | [![Go / net/http](docs/screenshots/go-nethttp.png)](examples/go-nethttp)<br>Go / `net/http` |
+| [![Rust / Axum](docs/screenshots/rust-axum.png)](examples/rust-axum)<br>Rust / Axum | [![Java / Spring Boot](docs/screenshots/java-spring.png)](examples/java-spring)<br>Java / Spring Boot |
+| [![C# / ASP.NET Core](docs/screenshots/dotnet-aspnet.png)](examples/dotnet-aspnet)<br>C# / ASP.NET Core | |
 
 ## Layout
 
 ```
 packages/components/     the Stencil component library -> dist/ssr-wasm/index.wasm + client bundle
 examples/<lang>-<fw>/    one app per language, each with a Dockerfile and README
-tests/conformance/       one test suite every example must pass, plus a Node reference server
+tests/conformance/       one test suite every example must pass
 CONTRACT.md              what every example implements: routes, page markup, plugin lifecycle
 ```
 
@@ -109,20 +108,17 @@ before running `scripts/docker-build.sh`. It's passed to the builds as an option
   duplicating it, and the components respond to clicks.
 
 ```sh
-pnpm test                                   # against the Node reference server (started for you)
+pnpm test                                   # against a minimal Node implementation of CONTRACT.md
 BASE_URL=http://localhost:8003 pnpm test    # against a running example
 ALL_BROWSERS=1 BASE_URL=... pnpm test       # also Firefox and WebKit
 ```
 
 ## Render times
 
-Median time to render each page, from 30 sequential requests on a warm server, in a small Docker
-VM (1 CPU, ~2.5 GB). "Plugin" is the time spent in `renderToString`, from the example's
-`Server-Timing` header, where it sends one. "End to end" is the whole HTTP response. Treat these as
-rough and relative: absolute numbers depend on the hardware. Measured with `@stencil/core`
-5.0.0-beta.35, where the plugin reuses one render window across calls
-([`reuseWindow`](https://stenciljs.com/docs/ssr#reusewindow)), so each call skips setting up
-Stencil's runtime again.
+Median of 30 sequential requests on a warm server, in a small Docker VM (1 CPU, ~2.5 GB), with
+`@stencil/core` 5.0.0-beta.35. "Plugin" is time spent in `renderToString` (from the
+`Server-Timing` header, where the example sends one); "end to end" is the whole HTTP response.
+Treat them as rough and relative.
 
 | Example | Extism runtime | `/` plugin | `/` end to end | `/helper` plugin | `/helper` end to end |
 |---|---|---|---|---|---|
@@ -162,10 +158,10 @@ aren't Node. If your server is Node already, use the `ssr` output target.
 
 ## Things to know about `ssr-wasm`
 
-These come from building the examples, and each example's README covers how it handles them:
+Each example's README shows how it handles these:
 
-- **Instances aren't thread-safe.** Compile the module once, and give each worker or thread its
-  own plugin instance, or use a pool.
+- **Instances aren't thread-safe.** Compile the plugin once, then give each worker or thread its
+  own instance, or use a pool.
 - **Hydration IDs.** Full-document renders always number them from 1. Fragment renders
   (`fullDocument: false`) share one counter in the plugin instance, so the fragments of a page
   never collide. For repeatable output, call `resetSsrDocData` once per request before the first
