@@ -24,16 +24,20 @@ using that language's popular web framework:
 
 ### Screenshots
 
-Each example's `/` page, server-rendered by that language and hydrated in the browser. Click one
-to open the example. `scripts/screenshots.mjs` takes them, and only saves a screenshot once every
-component, including those inside shadow roots, has hydrated correctly.
+**Each screenshot below is a purely server-rendered page, with JavaScript disabled in the
+browser.** No client-side code ran: everything you see, including the shadow DOM components and
+their styles, is the HTML that language's server sent. When JavaScript is on, the client bundle
+hydrates that same markup. The conformance suite checks that hydration separately.
+
+Click a screenshot to open its example. `scripts/screenshots.mjs` takes them, and refuses to save
+one if the components didn't render correctly.
 
 | | |
 |---|---|
-| [![PHP / Laravel](docs/screenshots/php-laravel.png)](examples/php-laravel)<br>PHP / Laravel | [![Python / Django](docs/screenshots/python-django.png)](examples/python-django)<br>Python / Django |
-| [![Ruby / Rails](docs/screenshots/ruby-rails.png)](examples/ruby-rails)<br>Ruby / Rails | [![Go / net/http](docs/screenshots/go-nethttp.png)](examples/go-nethttp)<br>Go / `net/http` |
-| [![Rust / Axum](docs/screenshots/rust-axum.png)](examples/rust-axum)<br>Rust / Axum | [![Java / Spring Boot](docs/screenshots/java-spring.png)](examples/java-spring)<br>Java / Spring Boot |
-| [![C# / ASP.NET Core](docs/screenshots/dotnet-aspnet.png)](examples/dotnet-aspnet)<br>C# / ASP.NET Core | |
+| [![PHP / Laravel](docs/screenshots/php-laravel.png)](examples/php-laravel)<br>PHP / Laravel · server-rendered, JavaScript off | [![Python / Django](docs/screenshots/python-django.png)](examples/python-django)<br>Python / Django · server-rendered, JavaScript off |
+| [![Ruby / Rails](docs/screenshots/ruby-rails.png)](examples/ruby-rails)<br>Ruby / Rails · server-rendered, JavaScript off | [![Go / net/http](docs/screenshots/go-nethttp.png)](examples/go-nethttp)<br>Go / `net/http` · server-rendered, JavaScript off |
+| [![Rust / Axum](docs/screenshots/rust-axum.png)](examples/rust-axum)<br>Rust / Axum · server-rendered, JavaScript off | [![Java / Spring Boot](docs/screenshots/java-spring.png)](examples/java-spring)<br>Java / Spring Boot · server-rendered, JavaScript off |
+| [![C# / ASP.NET Core](docs/screenshots/dotnet-aspnet.png)](examples/dotnet-aspnet)<br>C# / ASP.NET Core · server-rendered, JavaScript off | |
 
 ## Layout
 
