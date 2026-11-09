@@ -79,7 +79,7 @@ func newHelperTemplates() *template.Template {
 
 // indexHandler renders the page with no SSR; the middleware wrapped around it does that.
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	writePage(w, r, indexTmpl, pageData{Framework: framework, Tasks: tasksJSON})
+	writePage(w, indexTmpl, pageData{Framework: framework, Tasks: tasksJSON})
 }
 
 // helperHandler takes one plugin instance for the request and lets every `stencil` call in the
@@ -87,27 +87,23 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func helperHandler(renderer *ssr.Renderer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h, err := renderer.Acquire(r.Context())
-		if err != nil {
-			slog.Error("helper: no plugin instance", "err", err)
+		if err != nil { // only when the request is cancelled while waiting for an instance
 			http.Error(w, "service unavailable", http.StatusServiceUnavailable)
 			return
 		}
 		defer h.Release()
-		writePage(w, r, helperTmpl, pageData{Framework: framework, Tasks: tasksJSON, SSR: h})
+		writePage(w, helperTmpl, pageData{Framework: framework, Tasks: tasksJSON, SSR: h})
 	}
 }
 
 // writePage executes the layout into a buffer first, so a template error becomes a clean 500
 // instead of a half-written page.
-func writePage(w http.ResponseWriter, r *http.Request, t *template.Template, data pageData) {
+func writePage(w http.ResponseWriter, t *template.Template, data pageData) {
 	var b bytes.Buffer
 	if err := t.ExecuteTemplate(&b, "layout", data); err != nil {
-		slog.Error("template", "path", r.URL.Path, "err", err)
+		slog.Error("template", "err", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
-	}
-	if data.SSR != nil {
-		w.Header().Set("Server-Timing", serverTiming(data.SSR.Elapsed()))
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(b.Bytes())

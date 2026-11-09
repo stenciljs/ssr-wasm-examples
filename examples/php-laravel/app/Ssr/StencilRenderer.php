@@ -5,14 +5,12 @@ namespace App\Ssr;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Renders Stencil components to HTML for the current request.
+ * Renders Stencil components for the current request. Used by both the middleware and the
+ * `@stencil` Blade directive.
  *
- * Bound as `scoped`: Laravel (and Octane) create a fresh instance for each request.
- *
- * Hydration ids: full-document renders always start from 1 on their own. Fragments share one
- * id sequence in the plugin (so the fragments of a page never collide), which keeps counting
- * across requests unless it's reset. That's harmless, but resetting once - before the request's
- * first fragment, never between fragments - gives the same output for the same page.
+ * Bound as `scoped`, so there's a fresh instance per request. Before the request's first
+ * fragment it resets the plugin's hydration ids, so all fragments on a page share one sequence.
+ * Full-document renders don't need the reset.
  */
 class StencilRenderer
 {
@@ -23,8 +21,8 @@ class StencilRenderer
     /**
      * Server-render the Stencil components in `$html`.
      *
-     * On failure the original HTML is returned unchanged (the components still render on the
-     * client), and the error is logged.
+     * On failure, logs the error and returns `$html` unchanged; the components then render in
+     * the browser.
      *
      * @param  array<string, mixed>  $options  e.g. `['fullDocument' => false]` for a fragment
      */
@@ -37,11 +35,13 @@ class StencilRenderer
             }
             $result = $this->plugin->renderToString($html, $options);
         } catch (\Throwable $e) {
+            // A wasm trap throws Extism\FunctionCallException.
             Log::error('[ssr-wasm] renderToString failed', ['exception' => $e]);
 
             return $html;
         }
 
+        // A plugin error comes back as `{"__error": "..."}`.
         if (isset($result['__error'])) {
             Log::error('[ssr-wasm] '.$result['__error']);
 

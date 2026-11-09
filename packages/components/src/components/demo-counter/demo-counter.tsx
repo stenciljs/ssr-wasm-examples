@@ -1,8 +1,8 @@
 import { Component, Event, EventEmitter, Prop, State, h } from '@stencil/core';
 
 /**
- * Shadow DOM + @State + componentWillLoad + an event. Used to prove the server-rendered
- * markup hydrates into a live, interactive component on the client.
+ * Shadow DOM with state, `componentWillLoad` and an event. The server renders the starting
+ * count; after hydration the button works like any client-rendered component.
  */
 @Component({
   tag: 'demo-counter',

@@ -24,7 +24,6 @@ public sealed class PagesTests(AppFactory factory) : IClassFixture<AppFactory>
         Assert.Equal(HttpStatusCode.OK, res.StatusCode);
         Assert.Matches("<html[^>]*data-stencil-build", System.Text.Encoding.UTF8.GetString(body));
         Assert.Equal(body.Length, res.Content.Headers.ContentLength); // fixed up for the rendered body
-        Assert.True(res.Headers.Contains("Server-Timing"));
     }
 
     [Fact]
@@ -43,6 +42,5 @@ public sealed class PagesTests(AppFactory factory) : IClassFixture<AppFactory>
         Assert.Equal("ok", await client.GetStringAsync("/health", TestContext.Current.CancellationToken));
         var js = await client.GetAsync("/stencil/demo-components.esm.js", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, js.StatusCode);
-        Assert.False(js.Headers.Contains("Server-Timing"));
     }
 }

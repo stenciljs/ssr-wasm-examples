@@ -6,11 +6,11 @@ export interface DemoTask {
 }
 
 /**
- * Shadow DOM, a complex (array) prop, and nested Stencil components (`demo-badge`).
+ * Shadow DOM, an array prop, and nested Stencil components (`demo-badge`).
  *
- * The ssr-wasm plugin can only receive HTML, so complex data has to arrive as an attribute
- * string. `serialize: 'json'` parses the `tasks` attribute's JSON into the array (and carries the
- * value to the browser in the attribute); on the client the property can also be set directly.
+ * The server can only pass HTML to the plugin, so the array arrives as a JSON attribute:
+ * `serialize: 'json'` parses it into `tasks`. In the browser the property can also be set
+ * directly.
  */
 @Component({
   tag: 'demo-task-list',

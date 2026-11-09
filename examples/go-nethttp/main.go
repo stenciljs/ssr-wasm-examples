@@ -9,115 +9,52 @@ package main
 
 import (
 	"context"
-	"errors"
-	"flag"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
-	"os/signal"
 	"runtime"
 	"strconv"
-	"strings"
-	"syscall"
-	"time"
 
 	"ssr-wasm-examples/go-nethttp/internal/ssr"
 )
 
 func main() {
-	warmCache := flag.Bool("warm-cache", false, "compile the plugin into SSR_CACHE_DIR and exit (used by the Dockerfile)")
-	healthcheck := flag.Bool("healthcheck", false, "GET /health on the local server and exit non-zero on failure")
-	flag.Parse()
-
 	port := env("PORT", "8004")
-	if *healthcheck {
-		os.Exit(checkHealth(port))
+	if len(os.Args) > 1 && os.Args[1] == "-healthcheck" {
+		healthcheck(port) // the Docker HEALTHCHECK; the distroless image has no curl
 	}
 
-	cfg := ssr.Config{
-		WasmPath: env("SSR_WASM_PATH", "../../packages/components/dist/ssr-wasm/index.wasm"),
-		PoolSize: envInt("SSR_POOL_SIZE", runtime.GOMAXPROCS(0)),
-		CacheDir: os.Getenv("SSR_CACHE_DIR"),
-	}
+	wasmPath := env("SSR_WASM_PATH", "../../packages/components/dist/ssr-wasm/index.wasm")
 	clientDir := env("STENCIL_CLIENT_DIR", "../../packages/components/dist/loader-bundle/demo-components")
-
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	if *warmCache {
-		if cfg.CacheDir == "" {
-			fatal("-warm-cache needs SSR_CACHE_DIR")
-		}
-		cfg.PoolSize = 1
+	// A render is pure CPU work, so more instances than CPUs only queue.
+	poolSize, err := strconv.Atoi(env("SSR_POOL_SIZE", strconv.Itoa(runtime.GOMAXPROCS(0))))
+	if err != nil || poolSize < 1 {
+		fatal("SSR_POOL_SIZE must be a positive integer")
 	}
 
-	renderer, err := ssr.New(ctx, cfg)
+	renderer, err := ssr.New(context.Background(), wasmPath, poolSize)
 	if err != nil {
 		fatal(err.Error())
-	}
-	slog.Info("ssr-wasm plugin ready",
-		"wasm", cfg.WasmPath,
-		"compile", renderer.Stats.Compile.Round(time.Millisecond),
-		"instantiate", roundAll(renderer.Stats.Instantiate),
-		"pool", cfg.PoolSize,
-		"cache", cfg.CacheDir)
-	if *warmCache {
-		renderer.Close(ctx)
-		return
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("GET /{$}", ssrMiddleware(renderer)(http.HandlerFunc(indexHandler)))
+	mux.Handle("GET /{$}", ssrMiddleware(renderer, http.HandlerFunc(indexHandler)))
 	mux.Handle("GET /helper", helperHandler(renderer))
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Write([]byte("ok"))
 	})
-	mux.Handle("GET /stencil/", http.StripPrefix("/stencil/", noDirListing(http.FileServer(http.Dir(clientDir)))))
+	mux.Handle("GET /stencil/", http.StripPrefix("/stencil/", http.FileServer(http.Dir(clientDir))))
 
-	srv := &http.Server{
-		Addr:              ":" + port,
-		Handler:           mux,
-		ReadHeaderTimeout: 10 * time.Second,
-	}
-	go func() {
-		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		srv.Shutdown(shutdownCtx)
-	}()
-
-	slog.Info("listening", "url", "http://localhost:"+port)
-	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		fatal(err.Error())
-	}
-	renderer.Close(context.Background())
+	slog.Info("listening", "url", "http://localhost:"+port, "pool", poolSize)
+	fatal(http.ListenAndServe(":"+port, mux).Error())
 }
 
-func noDirListing(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "" || strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
-// checkHealth is the container HEALTHCHECK; the runtime image has no curl or shell.
-func checkHealth(port string) int {
-	c := http.Client{Timeout: 3 * time.Second}
-	res, err := c.Get("http://127.0.0.1:" + port + "/health")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
+func healthcheck(port string) {
+	res, err := http.Get("http://127.0.0.1:" + port + "/health")
+	if err != nil || res.StatusCode != http.StatusOK {
+		os.Exit(1)
 	}
-	res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return 1
-	}
-	return 0
+	os.Exit(0)
 }
 
 func env(key, def string) string {
@@ -125,25 +62,6 @@ func env(key, def string) string {
 		return v
 	}
 	return def
-}
-
-func envInt(key string, def int) int {
-	if v := os.Getenv(key); v != "" {
-		n, err := strconv.Atoi(v)
-		if err != nil || n < 1 {
-			fatal(key + " must be a positive integer")
-		}
-		return n
-	}
-	return def
-}
-
-func roundAll(ds []time.Duration) []string {
-	out := make([]string, len(ds))
-	for i, d := range ds {
-		out[i] = d.Round(time.Millisecond).String()
-	}
-	return out
 }
 
 func fatal(msg string) {

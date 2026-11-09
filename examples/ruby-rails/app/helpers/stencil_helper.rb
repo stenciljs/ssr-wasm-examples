@@ -4,12 +4,7 @@ module StencilHelper
   #   <%= stencil do %>
   #     <demo-counter start="5" step="2"></demo-counter>
   #   <% end %>
-  #
-  # Every call in a request uses the same plugin instance and one hydration-id sequence (reset
-  # before the first call, never between calls), so ids stay unique across the page. Extra keyword arguments are passed through as
-  # render options.
-  def stencil(**options, &block)
-    html = capture(&block).to_str
-    StencilSsr.session(request.env).render_fragment(html, **options).html_safe
+  def stencil(&block)
+    StencilSsr.render_fragment(request.env, capture(&block).to_str).html_safe
   end
 end

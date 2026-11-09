@@ -1,13 +1,10 @@
 package com.example.stencilssr.ssr;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -15,8 +12,6 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import tools.jackson.databind.json.JsonMapper;
 
 /** Runs against the real plugin (SSR_WASM_PATH, or packages/components/dist) and libextism. */
 public class SsrRendererTest {
@@ -31,7 +26,7 @@ public class SsrRendererTest {
     @BeforeAll
     static void setUp() {
         assumeTrue(Files.isReadable(wasmPath()), "plugin not found at " + wasmPath() + " (set SSR_WASM_PATH)");
-        renderer = new SsrRenderer(new SsrRenderer.Config(wasmPath(), 2, Duration.ofMillis(100), Duration.ofSeconds(30)));
+        renderer = new SsrRenderer(wasmPath(), 2);
     }
 
     @AfterAll
@@ -48,10 +43,9 @@ public class SsrRendererTest {
 
     @Test
     void rendersAFragment() {
-        try (SsrHandle h = renderer.acquire()) {
-            String out = h.render("<demo-counter start=\"5\" step=\"2\"></demo-counter>", SsrOptions.FRAGMENT);
+        try (SsrRenderer.Handle h = renderer.acquire()) {
+            String out = h.renderFragment("<demo-counter start=\"5\" step=\"2\"></demo-counter>");
             assertThat(out).contains("<template shadowrootmode=\"open\">").doesNotContain("<html");
-            assertThat(h.elapsed()).isPositive();
         }
     }
 
@@ -60,9 +54,9 @@ public class SsrRendererTest {
     void fragmentIdsResetOncePerHandle() {
         String badge = "<demo-badge tone=\"success\">SSR</demo-badge>";
         for (int i = 0; i < 2; i++) {
-            try (SsrHandle h = renderer.acquire()) {
-                assertThat(ids(h.render(badge, SsrOptions.FRAGMENT))).containsExactly("1");
-                assertThat(ids(h.render(badge, SsrOptions.FRAGMENT))).containsExactly("2");
+            try (SsrRenderer.Handle h = renderer.acquire()) {
+                assertThat(ids(h.renderFragment(badge))).containsExactly("1");
+                assertThat(ids(h.renderFragment(badge))).containsExactly("2");
             }
         }
     }
@@ -71,35 +65,24 @@ public class SsrRendererTest {
     @Test
     void documentIdsStartFromOne() {
         String page = "<html><body><demo-badge>a</demo-badge><demo-badge>b</demo-badge></body></html>";
-        try (SsrHandle h = renderer.acquire()) {
+        try (SsrRenderer.Handle h = renderer.acquire()) {
             for (int i = 0; i < 3; i++) {
-                assertThat(ids(h.render(page, SsrOptions.DOCUMENT))).containsExactly("1", "2");
+                assertThat(ids(h.renderDocument(page))).containsExactly("1", "2");
             }
         }
     }
 
+    /** Closing returns the instance to the pool, and closing twice is harmless. */
     @Test
-    void acquireTimesOutWhenThePoolIsEmpty() {
-        List<SsrHandle> held = new ArrayList<>();
-        for (int i = 0; i < renderer.config().poolSize(); i++) held.add(renderer.acquire());
-        assertThatThrownBy(renderer::acquire).isInstanceOf(SsrUnavailableException.class);
-        for (SsrHandle h : held) {
+    void closeReturnsTheInstance() {
+        for (int i = 0; i < 5; i++) {
+            SsrRenderer.Handle h = renderer.acquire();
             h.close();
-            h.close(); // idempotent
+            h.close();
         }
-        assertThat(renderer.available()).isEqualTo(renderer.config().poolSize());
-    }
-
-    @Test
-    void parseResult() {
-        JsonMapper json = JsonMapper.builder().build();
-        assertThat(SsrHandle.parseResult(json, bytes("{\"html\":\"<p>ok</p>\",\"hydratedCount\":0}"))).isEqualTo("<p>ok</p>");
-        for (String bad : List.of("{\"__error\":\"ReferenceError: x\"}", "{\"__error\":{\"message\":\"x\"}}", "{}", "not json")) {
-            assertThatThrownBy(() -> SsrHandle.parseResult(json, bytes(bad))).as(bad).isInstanceOf(SsrHandle.RenderException.class);
+        try (SsrRenderer.Handle a = renderer.acquire(); SsrRenderer.Handle b = renderer.acquire()) {
+            assertThat(ids(a.renderDocument("<demo-badge>a</demo-badge>"))).containsExactly("1");
+            assertThat(ids(b.renderDocument("<demo-badge>b</demo-badge>"))).containsExactly("1");
         }
-    }
-
-    private static byte[] bytes(String s) {
-        return s.getBytes(StandardCharsets.UTF_8);
     }
 }

@@ -20,14 +20,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Helper mode: server-render the enclosed component markup as a fragment.
+        // Helper mode: `@stencil ... @endstencil` buffers the enclosed Blade output and renders
+        // it as a fragment. Directives, not a Blade component, so the result isn't compiled again.
         //
-        //   @stencil
-        //     <demo-task-list tasks="{{ json_encode($tasks) }}"></demo-task-list>
-        //   @endstencil
-        //
-        // The content is ordinary Blade (escaped as usual); its output is buffered and passed
-        // through renderToString with {"fullDocument": false}.
+        //   @stencil<demo-task-list tasks="{{ json_encode($tasks) }}"></demo-task-list>@endstencil
         Blade::directive('stencil', fn () => '<?php ob_start(); ?>');
         Blade::directive('endstencil', fn () => '<?php echo app(\App\Ssr\StencilRenderer::class)->fragment(ob_get_clean()); ?>');
     }

@@ -7,8 +7,8 @@ use Laravel\Octane\Octane;
 return [
     'server' => env('OCTANE_SERVER', 'frankenphp'),
 
-    // Resolved when each worker boots, before it takes requests: every worker instantiates the
-    // ssr-wasm plugin once, up front, instead of making its first visitor wait for it.
+    // Resolved once when each worker boots and kept for every request it serves: one ssr-wasm
+    // plugin per worker. (A singleton first resolved during a request would only last that request.)
     'warm' => [
         ...Octane::defaultServicesToWarm(),
         SsrPlugin::class,

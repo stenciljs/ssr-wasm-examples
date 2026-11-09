@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using SsrWasm.Ssr;
 
@@ -9,7 +8,7 @@ namespace SsrWasm.Tests;
 /// <summary>One renderer for the whole class: compiling the module takes seconds without a warm cache.</summary>
 public sealed class RendererFixture : IDisposable
 {
-    public SsrRenderer Renderer { get; } = new(new SsrConfig { WasmPath = Paths.WasmPath, PoolSize = 2 }, NullLogger<SsrRenderer>.Instance);
+    public SsrRenderer Renderer { get; } = new(Paths.WasmPath, 2, NullLogger<SsrRenderer>.Instance);
     public void Dispose() => Renderer.Dispose();
 }
 
@@ -26,11 +25,10 @@ public sealed partial class SsrRendererTests(RendererFixture fixture) : IClassFi
     public async Task Fragment_render_produces_declarative_shadow_dom_without_a_document()
     {
         using var h = Renderer.CreateHandle();
-        var html = await h.RenderAsync("""<demo-counter start="5" step="2"></demo-counter>""", SsrOptions.Fragment);
+        var html = await h.RenderAsync("""<demo-counter start="5" step="2"></demo-counter>""", fragment: true);
         Assert.Contains("""<template shadowrootmode="open">""", html);
         Assert.DoesNotContain("<html", html);
         Assert.True(h.RenderedFragments);
-        Assert.True(h.Elapsed > TimeSpan.Zero);
     }
 
     // Fragment ids are reset once per handle, before the first fragment: fragments of one request
@@ -42,8 +40,8 @@ public sealed partial class SsrRendererTests(RendererFixture fixture) : IClassFi
         for (var i = 0; i < 2; i++)
         {
             using var h = Renderer.CreateHandle();
-            var a = Ids(await h.RenderAsync(badge, SsrOptions.Fragment));
-            var b = Ids(await h.RenderAsync(badge, SsrOptions.Fragment));
+            var a = Ids(await h.RenderAsync(badge, fragment: true));
+            var b = Ids(await h.RenderAsync(badge, fragment: true));
             Assert.Equal(["1"], a);
             Assert.Equal(["2"], b);
         }
@@ -67,30 +65,23 @@ public sealed partial class SsrRendererTests(RendererFixture fixture) : IClassFi
     {
         using var a = Renderer.CreateHandle();
         using var b = Renderer.CreateHandle();
-        await a.RenderAsync("<demo-badge>a</demo-badge>", SsrOptions.Fragment); // takes both instances
-        await b.RenderAsync("<demo-badge>b</demo-badge>", SsrOptions.Fragment);
+        await a.RenderAsync("<demo-badge>a</demo-badge>", fragment: true); // takes both instances
+        await b.RenderAsync("<demo-badge>b</demo-badge>", fragment: true);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
-        var context = new DefaultHttpContext { RequestAborted = cts.Token };
-        using var c = Renderer.CreateHandle(context);
+        using var c = Renderer.CreateHandle(cts.Token);
         const string input = "<demo-badge>c</demo-badge>";
-        Assert.Equal(input, await c.RenderAsync(input, SsrOptions.Fragment)); // unrendered fallback
+        Assert.Equal(input, await c.RenderAsync(input, fragment: true)); // unrendered fallback
     }
 
     [Fact]
-    public async Task Released_handle_returns_its_input_and_the_instance_is_reused()
+    public async Task Disposing_a_handle_returns_its_instance_to_the_pool()
     {
-        var h = Renderer.CreateHandle();
-        await h.RenderAsync("<demo-badge>a</demo-badge>");
-        h.Release();
-        h.Release(); // idempotent
-        Assert.Equal("<demo-badge>x</demo-badge>", await h.RenderAsync("<demo-badge>x</demo-badge>"));
-
-        // Both instances are back in the pool: two handles can render at once.
-        using var a = Renderer.CreateHandle();
-        using var b = Renderer.CreateHandle();
-        Assert.Contains("s-id=", await a.RenderAsync("<demo-badge>a</demo-badge>", SsrOptions.Fragment));
-        Assert.Contains("s-id=", await b.RenderAsync("<demo-badge>b</demo-badge>", SsrOptions.Fragment));
+        for (var i = 0; i < 3; i++) // more handles in turn than the pool has instances
+        {
+            using var h = Renderer.CreateHandle(new CancellationTokenSource(TimeSpan.FromSeconds(10)).Token);
+            Assert.Contains("s-id=", await h.RenderAsync("<demo-badge>a</demo-badge>", fragment: true));
+        }
     }
 
     [Theory]
@@ -100,7 +91,7 @@ public sealed partial class SsrRendererTests(RendererFixture fixture) : IClassFi
     [InlineData("""[]""")]
     public void ParseResult_rejects_errors_and_malformed_results(string json)
     {
-        Assert.Throws<SsrException>(() => SsrRenderer.ParseResult(Encoding.UTF8.GetBytes(json)));
+        Assert.ThrowsAny<Exception>(() => SsrRenderer.ParseResult(Encoding.UTF8.GetBytes(json)));
     }
 
     [Fact]

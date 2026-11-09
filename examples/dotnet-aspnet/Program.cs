@@ -25,29 +25,22 @@ if (builder.Configuration["urls"] is null && builder.Configuration["http_ports"]
 }
 
 var warmCache = args.Contains("--warm-cache");
-var ssrConfig = new SsrConfig
-{
-    WasmPath = Env("SSR_WASM_PATH", "../../packages/components/dist/ssr-wasm/index.wasm"),
-    PoolSize = warmCache ? 1 : int.TryParse(Environment.GetEnvironmentVariable("SSR_POOL_SIZE"), out var n) && n > 0 ? n : Environment.ProcessorCount,
-};
+var wasmPath = Env("SSR_WASM_PATH", "../../packages/components/dist/ssr-wasm/index.wasm");
+var poolSize = warmCache ? 1 : int.TryParse(Env("SSR_POOL_SIZE", ""), out var n) && n > 0 ? n : Environment.ProcessorCount;
 var clientDir = Path.GetFullPath(Env("STENCIL_CLIENT_DIR", "../../packages/components/dist/loader-bundle/demo-components"));
 
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton(ssrConfig);
-builder.Services.AddSingleton<SsrRenderer>();
+builder.Services.AddSingleton(sp => new SsrRenderer(wasmPath, poolSize, sp.GetRequiredService<ILogger<SsrRenderer>>()));
 // One handle per request, shared by the middleware and every <stencil> tag helper.
 builder.Services.AddScoped(sp => sp.GetRequiredService<SsrRenderer>()
-    .CreateHandle(sp.GetRequiredService<IHttpContextAccessor>().HttpContext));
+    .CreateHandle(sp.GetRequiredService<IHttpContextAccessor>().HttpContext?.RequestAborted ?? default));
 
 var app = builder.Build();
 
 // Compile and fill the pool before listening, so the first requests don't pay for it.
-var renderer = app.Services.GetRequiredService<SsrRenderer>();
-app.Logger.LogInformation(
-    "ssr-wasm plugin ready: wasm={Wasm} compile={Compile:F0}ms instantiate=[{Instantiate}] pool={Pool}",
-    ssrConfig.WasmPath, renderer.CompileTime.TotalMilliseconds,
-    string.Join(", ", renderer.InstantiateTimes.Select(t => $"{t.TotalMilliseconds:F0}ms")), renderer.PoolSize);
+app.Services.GetRequiredService<SsrRenderer>();
+app.Logger.LogInformation("ssr-wasm plugin ready: wasm={Wasm} pool={Pool}", wasmPath, poolSize);
 if (warmCache)
 {
     return 0;

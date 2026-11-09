@@ -39,7 +39,6 @@ class PagesTest {
     void middlewareRendersTheWholeDocument() throws Exception {
         var res = get("/");
         assertThat(res.statusCode()).isEqualTo(200);
-        assertThat(res.headers().firstValue("server-timing")).hasValueSatisfying(v -> assertThat(v).startsWith("ssr;"));
         assertThat(res.body()).containsPattern("<html[^>]*data-stencil-build")
                 .contains("Render with &lt;wasm&gt; &amp; \"friends\"")
                 .contains("2 of 3 remaining");
@@ -50,7 +49,6 @@ class PagesTest {
     void helperRendersFragmentsAndTheFilterSkipsThePage() throws Exception {
         var res = get("/helper");
         assertThat(res.statusCode()).isEqualTo(200);
-        assertThat(res.headers().firstValue("server-timing")).isPresent();
         assertThat(res.body()).doesNotContainPattern("<html[^>]*data-stencil-build")
                 .contains("<template shadowrootmode=\"open\">")
                 .contains("Render with &lt;wasm&gt; &amp; \"friends\"");
@@ -61,7 +59,6 @@ class PagesTest {
     void healthAndStaticFilesAreNotRendered() throws Exception {
         var health = get("/health");
         assertThat(health.body()).isEqualTo("ok");
-        assertThat(health.headers().firstValue("server-timing")).isEmpty();
         var js = get("/stencil/demo-components.esm.js");
         assertThat(js.statusCode()).isEqualTo(200);
         assertThat(js.headers().firstValue("content-type")).hasValueSatisfying(v -> assertThat(v).contains("javascript"));

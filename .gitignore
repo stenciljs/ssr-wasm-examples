@@ -15,3 +15,7 @@ playwright-report/
 
 # local-only helpers
 scripts/link-core.mjs
+
+# python
+__pycache__/
+*.pyc

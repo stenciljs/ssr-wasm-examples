@@ -3,7 +3,6 @@ package ssr
 import (
 	"context"
 	"errors"
-	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -29,12 +28,7 @@ func renderer(t *testing.T) *Renderer {
 		t.Skipf("plugin not found at %s (set SSR_WASM_PATH): %v", path, err)
 	}
 	once.Do(func() {
-		shared, sharedErr = New(context.Background(), Config{
-			WasmPath:     path,
-			PoolSize:     2,
-			CacheDir:     os.Getenv("SSR_CACHE_DIR"),
-			PluginOutput: io.Discard,
-		})
+		shared, sharedErr = New(context.Background(), path, 2)
 	})
 	if sharedErr != nil {
 		t.Fatal(sharedErr)
@@ -66,9 +60,6 @@ func TestFragmentRender(t *testing.T) {
 	if strings.Contains(out, "<html") {
 		t.Fatalf("fragment render should not produce a document, got %q", out)
 	}
-	if h.Elapsed() <= 0 {
-		t.Fatal("Elapsed should count plugin time")
-	}
 }
 
 // Fragment ids are reset once per Acquire, before the first fragment: fragments in one request
@@ -91,12 +82,12 @@ func TestFragmentIdsResetOncePerAcquire(t *testing.T) {
 }
 
 func TestParseResult(t *testing.T) {
-	if html, err := parseResult([]byte(`{"html":"<p>ok</p>","hydratedCount":0}`)); err != nil || html != "<p>ok</p>" {
+	if html, err := parseResult([]byte(`{"html":"<p>ok</p>","hydratedCount":0}`), "in"); err != nil || html != "<p>ok</p>" {
 		t.Fatalf("got %q, %v", html, err)
 	}
 	for _, bad := range []string{`{"__error":"ReferenceError: x"}`, `{"__error":{"message":"x"}}`, `{}`, `not json`} {
-		if _, err := parseResult([]byte(bad)); err == nil {
-			t.Errorf("%s: want an error", bad)
+		if html, err := parseResult([]byte(bad), "in"); err == nil || html != "in" {
+			t.Errorf("%s: want an error and the input back, got %q, %v", bad, html, err)
 		}
 	}
 }
@@ -118,24 +109,9 @@ func TestAcquireWaitsForAFreeInstance(t *testing.T) {
 	}
 	for _, h := range held {
 		h.Release()
-		h.Release() // idempotent
 	}
 	if len(r.pool) != cap(r.pool) {
 		t.Fatalf("pool has %d of %d instances after release", len(r.pool), cap(r.pool))
-	}
-}
-
-// go test -run x -bench . ./internal/ssr
-func BenchmarkRenderFragment(b *testing.B) {
-	r := renderer(&testing.T{})
-	frag := `<demo-card heading="Card" variant="highlight"><p>Body</p><demo-badge tone="success">SSR</demo-badge></demo-card>`
-	for b.Loop() {
-		h, err := r.Acquire(context.Background())
-		if err != nil {
-			b.Fatal(err)
-		}
-		h.Render(frag, Fragment)
-		h.Release()
 	}
 }
 

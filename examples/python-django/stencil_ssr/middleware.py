@@ -3,16 +3,10 @@ from .ssr import REQUEST_ATTR, for_request
 
 class StencilSSRMiddleware:
     """
-    Middleware mode: passes every complete ``text/html`` response through ``renderToString``
-    (default options, so ``fullDocument: true``).
+    Renders every complete ``text/html`` response with ``renderToString`` as a full document.
 
-    Skipped:
-      * responses whose template already rendered components with ``{% stencil %}`` (helper
-        mode, e.g. ``/helper``) - rendering them again as a full document would re-process
-        server-rendered markup;
-      * non-HTML, streaming and already-encoded (e.g. gzipped) responses.
-
-    Adds a ``Server-Timing: ssr;dur=<ms>`` header whenever the plugin was used.
+    Skips responses that already used ``{% stencil %}`` (so components aren't rendered twice),
+    and non-HTML, streaming and compressed responses.
     """
 
     def __init__(self, get_response):
@@ -20,25 +14,21 @@ class StencilSSRMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-        renderer = getattr(request, REQUEST_ATTR, None)
 
-        if renderer is None or not renderer.fragments:
-            if not self._is_renderable(response):
-                return response
-            renderer = for_request(request)
-            charset = response.charset
-            response.content = renderer.render(response.content.decode(charset)).encode(charset)
-            if response.has_header("Content-Length"):
-                response["Content-Length"] = str(len(response.content))
+        helper = getattr(request, REQUEST_ATTR, None)
+        if helper is not None and helper.fragments:
+            return response  # {% stencil %} already rendered the components
+        if (
+            response.streaming
+            or not response.get("Content-Type", "").startswith("text/html")
+            or response.has_header("Content-Encoding")
+            or not response.content
+        ):
+            return response
 
-        response["Server-Timing"] = f"ssr;dur={renderer.seconds * 1000:.1f}"
+        charset = response.charset
+        html = for_request(request).render(response.content.decode(charset))
+        response.content = html.encode(charset)
+        if response.has_header("Content-Length"):
+            response["Content-Length"] = str(len(response.content))
         return response
-
-    @staticmethod
-    def _is_renderable(response) -> bool:
-        return (
-            not response.streaming
-            and response.get("Content-Type", "").startswith("text/html")
-            and not response.has_header("Content-Encoding")
-            and bool(response.content)
-        )

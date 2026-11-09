@@ -29,11 +29,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 COPY packages/components/dist/ssr-wasm/index.wasm /app/ssr-wasm/index.wasm
 
-# Pre-fill wazero's compilation cache, so the container skips compiling the module to native
-# code at startup (~1-2 s on one CPU; the cache is ~5 MB). The cache key includes the CPU
-# features, so on a different CPU it's simply a miss: the server compiles and refills it.
-RUN SSR_WASM_PATH=/app/ssr-wasm/index.wasm SSR_CACHE_DIR=/app/wazero-cache /out/server -warm-cache
-
 # ---- test: only built with --target test ----
 FROM build AS test
 ENV SSR_WASM_PATH=/app/ssr-wasm/index.wasm
@@ -45,12 +40,10 @@ FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=build /out/server /app/server
 COPY --from=build /app/ssr-wasm/index.wasm /app/ssr-wasm/index.wasm
-COPY --from=build --chown=nonroot:nonroot /app/wazero-cache /app/wazero-cache
 COPY packages/components/dist/loader-bundle/demo-components/ /app/stencil/
 ENV PORT=8004 \
     SSR_WASM_PATH=/app/ssr-wasm/index.wasm \
-    STENCIL_CLIENT_DIR=/app/stencil \
-    SSR_CACHE_DIR=/app/wazero-cache
+    STENCIL_CLIENT_DIR=/app/stencil
 EXPOSE 8004
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s CMD ["/app/server", "-healthcheck"]
 ENTRYPOINT ["/app/server"]

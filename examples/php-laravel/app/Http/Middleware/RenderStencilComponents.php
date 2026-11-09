@@ -5,13 +5,12 @@ namespace App\Http\Middleware;
 use App\Ssr\StencilRenderer;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Middleware mode: post-process the whole HTML response through Stencil's renderToString
- * (a full document, default options). Non-HTML, streamed and file responses pass through.
+ * Middleware mode: render the finished text/html response as a full document.
+ *
+ * Attach it only to routes whose views don't use `@stencil`, so nothing is rendered twice.
  */
 class RenderStencilComponents
 {
@@ -21,14 +20,10 @@ class RenderStencilComponents
     {
         $response = $next($request);
 
-        if ($response instanceof StreamedResponse
-            || $response instanceof BinaryFileResponse
-            || ! str_starts_with((string) $response->headers->get('Content-Type'), 'text/html')) {
-            return $response;
-        }
-
+        // Streamed and file responses have no content (false) and pass through untouched.
         $content = $response->getContent();
-        if ($content !== false && $content !== '') {
+        if (str_starts_with((string) $response->headers->get('Content-Type'), 'text/html')
+            && is_string($content) && $content !== '') {
             $response->setContent($this->renderer->render($content));
         }
 

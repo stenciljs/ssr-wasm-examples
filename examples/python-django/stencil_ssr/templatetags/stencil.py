@@ -6,11 +6,10 @@
       <demo-task-list tasks="{{ tasks_json }}"></demo-task-list>
     {% endstencil %}
 
-The block's contents are rendered by the template engine first (so variables are autoescaped as
-usual), then passed to ``renderToString`` with ``{"fullDocument": false}``. All blocks in one
-request share the request's plugin instance and one hydration-ID sequence (reset before the
-first block, never between blocks), so hydration IDs stay unique across the page. Using the tag also tells
-``StencilSSRMiddleware`` not to render the response again as a full document.
+The block is rendered as a normal template first (so variables are autoescaped), then passed to
+``renderToString`` with ``{"fullDocument": false}``. All blocks in a request share one plugin
+instance and one hydration-ID sequence, so IDs stay unique across the page. Using the tag also
+tells ``StencilSSRMiddleware`` to skip the response.
 """
 
 from django import template
@@ -43,4 +42,4 @@ class StencilNode(template.Node):
                 "so the plugin can be reset once per request."
             )
         html = self.nodelist.render(context)
-        return mark_safe(for_request(request).render_fragment(html))
+        return mark_safe(for_request(request).render(html, fragment=True))

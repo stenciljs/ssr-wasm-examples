@@ -1,8 +1,8 @@
 # PHP + Laravel
 
 A Laravel 13 app (PHP 8.4, Octane on FrankenPHP) that server-renders the demo components through
-the [Extism PHP SDK](https://github.com/extism/php-sdk) (`extism/extism`, which uses PHP's FFI
-extension and `libextism`). Runs on port 8001.
+the [Extism PHP SDK](https://github.com/extism/php-sdk) (`extism/extism`), following the steps in
+[How it works](../../README.md#how-it-works). Runs on port 8001.
 
 ![PHP / Laravel: the demo page, server-rendered by this example](../../docs/screenshots/php-laravel.png)
 
@@ -16,20 +16,14 @@ With Docker, building from the repo root:
 docker build -f examples/php-laravel/Dockerfile -t ssr-wasm-php-laravel .
 docker run --rm -p 8001:8001 ssr-wasm-php-laravel
 # http://localhost:8001/ and http://localhost:8001/helper
-
-cd tests/conformance && BASE_URL=http://localhost:8001 npx playwright test
 ```
 
-`SSR_WASM_PATH`, `STENCIL_CLIENT_DIR` and `OCTANE_WORKERS` (default 2) can be overridden with
-`docker run -e`.
-
 Behind a TLS-inspecting proxy, pass its root CA as a build secret:
-`docker build --secret id=ca,src=/path/to/proxy-ca.pem ...`, or set `EXTRA_CA_CERT` and run
-`scripts/docker-build.sh php-laravel` from the repo root.
+`docker build --secret id=ca,src=/path/to/proxy-ca.pem ...`.
 
 Natively, you need:
 
-- PHP 8.3+ with the `ffi` extension and `ffi.enable=true` in php.ini (see below).
+- PHP 8.3+ with the `ffi` extension and `ffi.enable=true` in php.ini.
 - `libextism.so` (Linux) or `libextism.dylib` (macOS) in `/usr/local/lib` or `/usr/lib`, from
   the [extism/extism releases](https://github.com/extism/extism/releases).
 - Composer, and the components built with `pnpm build` at the repo root.
@@ -47,70 +41,60 @@ php artisan octane:frankenphp --port=8001
 php artisan serve --port=8001
 ```
 
-`SSR_WASM_PATH` and `STENCIL_CLIENT_DIR` default to `../../packages/components/dist/...` in this
-checkout.
+| Variable | Default |
+|---|---|
+| `SSR_WASM_PATH` | `../../packages/components/dist/ssr-wasm/index.wasm` |
+| `STENCIL_CLIENT_DIR` | `../../packages/components/dist/loader-bundle/demo-components` |
+| `OCTANE_WORKERS` | `2` (Docker only) |
 
-## Where things are
+## How it's wired
 
 | File | What it does |
 |---|---|
-| [`app/Ssr/SsrPlugin.php`](app/Ssr/SsrPlugin.php) | Plugin wrapper: loads `index.wasm` with WASI, exposes `resetSsrDocData()` and `renderToString()`. |
-| [`app/Ssr/StencilRenderer.php`](app/Ssr/StencilRenderer.php) | Per-request renderer used by both modes; handles errors. |
-| [`app/Http/Middleware/RenderStencilComponents.php`](app/Http/Middleware/RenderStencilComponents.php) | Middleware for `/`. Renders buffered `text/html` responses, skips everything else. |
-| [`app/Providers/AppServiceProvider.php`](app/Providers/AppServiceProvider.php) | Container bindings and the `@stencil` / `@endstencil` Blade directives (helper for `/helper`). |
-| [`routes/web.php`](routes/web.php) | Routes; attaches the middleware to `/`. |
-| [`resources/views/`](resources/views/) | `middleware.blade.php`, `helper.blade.php`, `layouts/app.blade.php`. |
-| [`app/Http/Controllers/StencilAssetController.php`](app/Http/Controllers/StencilAssetController.php) | Serves the client bundle at `/stencil/*`. |
-| [`config/ssr.php`](config/ssr.php), [`config/octane.php`](config/octane.php) | Paths to the plugin and client bundle; Octane warms `SsrPlugin` at worker boot. |
+| [`app/Ssr/SsrPlugin.php`](app/Ssr/SsrPlugin.php) | Loads `index.wasm` with WASI; wraps `renderToString` and `resetSsrDocData`; replaces the instance after a call throws. |
+| [`app/Ssr/StencilRenderer.php`](app/Ssr/StencilRenderer.php) | Per-request renderer used by both modes; falls back to the input HTML on error. |
+| [`app/Http/Middleware/RenderStencilComponents.php`](app/Http/Middleware/RenderStencilComponents.php) | Renders the whole `text/html` response. |
+| [`app/Providers/AppServiceProvider.php`](app/Providers/AppServiceProvider.php) | Container bindings and the `@stencil` / `@endstencil` Blade directives. |
+| [`config/octane.php`](config/octane.php) | Warms `SsrPlugin` so each worker keeps one instance. |
 
-Helper mode in a template:
-
-```blade
-@stencil
-  <demo-task-list tasks="{{ json_encode($tasks) }}"></demo-task-list>
-@endstencil
-```
-
-## How it uses the plugin
-
-- **One plugin per Octane worker.** `SsrPlugin` is a container singleton listed in `octane.warm`,
-  so each worker creates it once at boot. A worker handles one request at a time, so the
-  instance (which isn't thread-safe) is never shared.
-- **Compiled once at build time.** The Dockerfile runs the plugin once during `docker build` to
-  fill wasmtime's cache in `~/.cache/wasmtime`, so worker boot only pays for instantiation.
-- **Reset once per request.** `StencilRenderer` is `scoped` (new per request) and calls
-  `resetSsrDocData` once, before the request's first fragment, so all fragments on a page share
-  one hydration ID sequence. Full-document renders don't need it.
-- **On `__error`** (or an FFI exception), the renderer logs it and returns the un-rendered HTML.
+- One plugin per Octane worker. `SsrPlugin` is a container singleton listed in `warm`, so it
+  loads at worker boot and outlives each request (a singleton first resolved inside a request
+  would be dropped with it). A worker handles one request at a time, so the instance is never
+  shared.
+- `StencilRenderer` is `scoped` (new per request) and calls `resetSsrDocData` before the
+  request's first fragment.
+- In a template, wrap each top-level component (see
+  [`helper.blade.php`](resources/views/helper.blade.php)):
+  ```blade
+  @stencil<demo-task-list tasks="{{ json_encode($tasks) }}"></demo-task-list>@endstencil
+  ```
+- The middleware is attached only to `/` in [`routes/web.php`](routes/web.php), so helper pages
+  are never rendered twice. It only touches `text/html` responses with content, so streamed and
+  file responses pass through.
 
 ## Things to know
 
-- **`ffi.enable=true` must be in php.ini.** The default (`preload`) only allows FFI on the CLI,
-  so FrankenPHP, PHP-FPM and `artisan serve` fail. A `-d` flag isn't passed to `artisan serve`'s
+- `ffi.enable=true` must be in php.ini. The default (`preload`) only allows FFI on the CLI, so
+  FrankenPHP, PHP-FPM and `artisan serve` fail. A `-d` flag isn't passed to `artisan serve`'s
   child process.
-- **Octane's auto-downloaded FrankenPHP binary may not have FFI.** Check with
-  `frankenphp php-cli -m`.
-- **`libextism` location is fixed.** The SDK only looks in `/usr/local/lib` and `/usr/lib`.
-- **Don't use a global `$lib`.** The SDK stores its FFI handle in a global with that name.
-- **Errors come back two ways.** Plugin errors are `{"__error": …}` JSON in the output; traps
-  (bad function name, wasm trap) throw `Extism\FunctionCallException`.
-- **Use a Blade directive, not a component.** A `<x-stencil>` component returning a string would
-  have the rendered HTML compiled as Blade again.
-- **Without Octane it works, but slowly.** Under `artisan serve` or PHP-FPM the plugin is
-  instantiated on every request (~150 ms with a warm cache, 6–10 s cold).
+- Octane's auto-downloaded FrankenPHP binary may not have FFI. Check with `frankenphp php-cli -m`.
+- The SDK only looks for `libextism` in `/usr/local/lib` and `/usr/lib`.
+- Don't use a global named `$lib`: the SDK stores its FFI handle there.
+- Errors come back two ways: `{"__error": ...}` JSON in the output, or a thrown
+  `Extism\FunctionCallException` on a trap. Handle both, and replace the instance after a trap.
+- Use a Blade directive, not a component. A `<x-stencil>` component returning a string would have
+  the rendered HTML compiled as Blade again.
+- Without Octane the plugin is instantiated on every request (~150 ms with a warm wasmtime cache,
+  6-10 s cold). The Dockerfile compiles the plugin once at build time to fill that cache.
 
-## Timings
+## Performance
 
-Rough numbers from a small Docker VM (1 CPU); see [Render times](../../README.md#render-times).
+Rough numbers from a small Docker VM (1 CPU); see [Performance](../../README.md#performance).
 
 | What | Time |
 |---|---|
-| Compile plugin (wasmtime cache cold, done once at `docker build`) | 5.8–9.9 s |
-| Instantiate plugin (cache warm; once per Octane worker) | ~160 ms |
-| `GET /health`, Laravel baseline with no rendering (Octane) | 5 ms |
-| `GET /`, Octane (1 whole-document `renderToString`) | ~46 ms |
-| `GET /helper`, Octane (4 fragment `renderToString` calls) | ~59 ms |
-| `GET /` without Octane (`php artisan serve`, plugin instantiated per request) | 147 ms |
-| `GET /helper` without Octane (plugin instantiated per request) | ~360 ms |
-
-Memory: the container uses ~160 MiB with 2 workers, each holding a plugin.
+| `GET /`, Octane (1 whole-document render) | ~46 ms |
+| `GET /helper`, Octane (4 fragment renders) | ~59 ms |
+| Instantiate plugin (warm cache; once per worker) | ~160 ms |
+| Compile plugin (cold cache) | 5.8-9.9 s |
+| Memory, 2 workers | ~160 MiB |

@@ -1,32 +1,15 @@
 # Stencil `ssr-wasm` examples
 
-Server-side rendering of [Stencil](https://stenciljs.com) web components from languages other
-than JavaScript.
+Server-side rendering of [Stencil](https://stenciljs.com) web components from PHP, Python, Ruby,
+Go, Rust, Java and C#.
 
-Stencil v5's [`ssr-wasm` output target](https://stenciljs.com/docs/ssr-wasm) compiles a
-component library's server renderer into a WebAssembly [Extism](https://extism.org) plugin. Any
-language with an Extism host SDK can load it and render components to HTML, with Declarative
-Shadow DOM, scoped styles and hydration markup, without running Node.js. The browser then
+Stencil's [`ssr-wasm` output target](https://stenciljs.com/docs/ssr-wasm) builds a component
+library's server renderer as a WebAssembly [Extism](https://extism.org) plugin. Any server with an
+Extism SDK can load it and render the components to HTML, without Node.js. The browser then
 hydrates that HTML with the library's normal client bundle.
 
-This repo has one component library and the same demo app written in several languages, each
-using that language's popular web framework:
-
-| Example | Language | Framework | Extism SDK | Port |
-|---|---|---|---|---|
-| [`examples/php-laravel`](examples/php-laravel) | PHP | Laravel | `extism/extism` (FFI) | 8001 |
-| [`examples/python-django`](examples/python-django) | Python | Django | `extism` | 8002 |
-| [`examples/ruby-rails`](examples/ruby-rails) | Ruby | Rails | `extism` gem (FFI) | 8003 |
-| [`examples/go-nethttp`](examples/go-nethttp) | Go | `net/http` + `html/template` | `extism/go-sdk` (pure Go, wazero) | 8004 |
-| [`examples/rust-axum`](examples/rust-axum) | Rust | Axum + MiniJinja | `extism` crate | 8005 |
-| [`examples/java-spring`](examples/java-spring) | Java | Spring Boot + Thymeleaf | `org.extism.sdk:extism` (JNA) | 8006 |
-| [`examples/dotnet-aspnet`](examples/dotnet-aspnet) | C# | ASP.NET Core (Razor Pages) | `Extism.Sdk` | 8007 |
-
-### Screenshots
-
-**Taken with JavaScript disabled in the browser:** each one is only the HTML that language's
-server sent, shadow DOM and styles included. With JavaScript on, the client bundle hydrates that
-same markup.
+**Each screenshot is the HTML a different language's server sent, with JavaScript disabled in the
+browser.**
 
 | | |
 |---|---|
@@ -35,90 +18,53 @@ same markup.
 | [![Rust / Axum](docs/screenshots/rust-axum.png)](examples/rust-axum)<br>Rust / Axum | [![Java / Spring Boot](docs/screenshots/java-spring.png)](examples/java-spring)<br>Java / Spring Boot |
 | [![C# / ASP.NET Core](docs/screenshots/dotnet-aspnet.png)](examples/dotnet-aspnet)<br>C# / ASP.NET Core | |
 
-## Layout
+## For component authors
 
-```
-packages/components/     the Stencil component library -> dist/ssr-wasm/index.wasm + client bundle
-examples/<lang>-<fw>/    one app per language, each with a Dockerfile and README
-tests/conformance/       one test suite every example must pass
-CONTRACT.md              what every example implements: routes, page markup, plugin lifecycle
-```
+Add the `ssr-wasm` output target next to your browser bundle, build, and give server developers
+the `.wasm` file and the browser bundle. Most components work unchanged. The main difference is
+that object and array props arrive as JSON attributes: declare them with
+`@Prop({ serialize: 'json' })`.
 
-### Components
+[`packages/components`](packages/components) is a working library set up this way, and its README
+covers what to ship and how to write components for it.
 
-Five small components cover the main ways a component can be built:
+## For server developers
 
-| Tag | Encapsulation | Shows |
+Pick the example for your stack. Each one is a small app showing both ways to use the plugin,
+with a README on how it works and what to watch out for:
+
+| Example | Framework | Extism SDK |
 |---|---|---|
-| `demo-card` | shadow | named and default slots, `::part`, a reflected variant prop |
-| `demo-badge` | scoped | scoped CSS hoisted to `<head>`, nested inside both light and shadow DOM |
-| `demo-counter` | shadow | `@State`, `componentWillLoad`, events, client interactivity after hydration |
-| `demo-notice` | none | plain light DOM styled by the page's own CSS |
-| `demo-task-list` | shadow | a complex (array) prop passed as a JSON attribute, nested components |
+| [PHP](examples/php-laravel) | Laravel | `extism/extism` |
+| [Python](examples/python-django) | Django | `extism` |
+| [Ruby](examples/ruby-rails) | Rails | `extism` gem |
+| [Go](examples/go-nethttp) | `net/http` + `html/template` | `extism/go-sdk` |
+| [Rust](examples/rust-axum) | Axum + MiniJinja | `extism` crate |
+| [Java](examples/java-spring) | Spring Boot + Thymeleaf | `org.extism.sdk:extism` |
+| [C#](examples/dotnet-aspnet) | ASP.NET Core | `Extism.Sdk` |
 
-### Two integration styles
+### How it works
 
-Every example shows both:
+1. **Load the plugin once.** Compile `index.wasm` with WASI enabled, once per process. A plugin
+   instance isn't thread-safe, so give each worker or thread its own instance, or use a pool.
+2. **Render.** Call `renderToString` with `{"html": "...", "options": {...}}`. It returns JSON,
+   with the rendered HTML in `html`. If the result has `__error` instead, log it and serve the HTML
+   you passed in: the components then render in the browser.
+3. **Choose how much HTML to send.** Every example shows both:
+   - **Middleware** (`/`): render the whole page as usual, then pass the finished HTML through
+     `renderToString`. It's the smallest change to an existing app.
+   - **Template helper** (`/helper`): a template tag or helper renders single components with
+     `"fullDocument": false`. Only those components go through the plugin.
+4. **Reset hydration IDs once per request** when using fragments: call `resetSsrDocData` before the
+   request's first fragment, never between fragments of one page. Whole-page renders don't need
+   it.
+5. **Serve the browser bundle** and load it on the page, so the components hydrate.
 
-- **Middleware** (`GET /`): the framework renders its page as usual, then a middleware/response
-  hook passes the whole HTML document through `renderToString`. This needs the fewest changes to
-  an existing app.
-- **Template helper** (`GET /helper`): a template tag, filter or helper renders individual
-  components with `fullDocument: false` and inlines the result. This gives finer control,
-  and the rest of the page never goes through the plugin.
+### Performance
 
-## Getting started
-
-Requirements: Node 22+, pnpm, Docker, and
-[`extism-js`](https://github.com/extism/js-pdk#install-the-compiler) on your `PATH` (it's used
-to compile the `.wasm`; it also needs Binaryen's `wasm-merge` and `wasm-opt`).
-
-```sh
-pnpm install
-pnpm build          # builds packages/components -> dist/ssr-wasm/index.wasm + client bundle
-
-# run an example
-scripts/docker-build.sh python-django
-docker run --rm -p 8002:8002 ssr-wasm-python-django
-open http://localhost:8002
-
-# check it
-BASE_URL=http://localhost:8002 pnpm test
-
-# or build and check every example
-scripts/docker-build.sh && scripts/conformance-all.sh
-```
-
-The example images are built with the repo root as context so they can copy in the built
-`packages/components/dist`. Run `pnpm build` first. Each example's README also covers running it
-without Docker.
-
-If your network uses a TLS-inspecting proxy, set `EXTRA_CA_CERT=/path/to/proxy-root-ca.pem`
-before running `scripts/docker-build.sh`. It's passed to the builds as an optional `ca` secret.
-
-## Conformance tests
-
-`tests/conformance` checks each example from the outside:
-
-- **Server HTML** (no JS): every component is rendered, Declarative Shadow DOM and scoped styles
-  are present, the complex prop survived the template engine's escaping, hydration IDs are
-  unique and start from 1 on every request, and concurrent requests all render correctly.
-- **Browser, JS off**: the page is fully rendered and styled before any JavaScript runs.
-- **Browser, JS on**: hydration produces no errors and reuses the server markup instead of
-  duplicating it, and the components respond to clicks.
-
-```sh
-pnpm test                                   # against a minimal Node implementation of CONTRACT.md
-BASE_URL=http://localhost:8003 pnpm test    # against a running example
-ALL_BROWSERS=1 BASE_URL=... pnpm test       # also Firefox and WebKit
-```
-
-## Render times
-
-Median of 30 sequential requests on a warm server, in a small Docker VM (1 CPU, ~2.5 GB), with
-`@stencil/core` 5.0.0-beta.35. "Plugin" is time spent in `renderToString` (from the
-`Server-Timing` header, where the example sends one); "end to end" is the whole HTTP response.
-Treat them as rough and relative.
+Median render times on a warm server, in a small Docker VM (1 CPU, ~2.5 GB), `@stencil/core`
+5.0.0-beta.35. "Plugin" is time spent in `renderToString`; "end to end" is the whole HTTP
+response. Treat them as rough and relative.
 
 | Example | Extism runtime | `/` plugin | `/` end to end | `/helper` plugin | `/helper` end to end |
 |---|---|---|---|---|---|
@@ -130,45 +76,46 @@ Treat them as rough and relative.
 | Java / Spring Boot | wasmtime | 47 ms | 58 ms | 56 ms | 71 ms |
 | C# / ASP.NET Core | wasmtime | 36 ms | 38 ms | 47 ms | 51 ms |
 
-The plugin spends most of its time in QuickJS, interpreting the components' JavaScript. That's
-why the runtime matters more than the host language: every SDK except Go's runs the plugin on
-wasmtime, whose Cranelift compiler produces faster code for the QuickJS interpreter than wazero
-does.
+- **The Extism runtime matters more than the language.** The plugin spends most of its time in
+  QuickJS, a JavaScript interpreter. wasmtime runs it several times faster than wazero, which is
+  why Go is slower.
+- **Node is faster still.** The same page renders in about 9 ms with Stencil's native
+  [`ssr`](https://stenciljs.com/docs/ssr) output target in Node, in the same VM (4 ms with
+  [`reuseWindow`](https://stenciljs.com/docs/ssr#reusewindow)). If your server is Node already,
+  use that instead.
+- **40–60 ms per page is still a normal server-rendering budget.** The output can be cached like
+  any other template output.
 
-### How do these numbers compare with Node and the native `ssr` output target?
+## Running the examples
 
-Node is faster. Here's the same page, rendered by the same component library's native
-[`ssr`](https://stenciljs.com/docs/ssr) output target in Node 22, in the same 1-CPU Docker VM. It's
-render time only, comparable to the "plugin" columns above:
+Requirements: Node 22+, pnpm, Docker, and
+[`extism-js`](https://github.com/extism/js-pdk#install-the-compiler) (plus Binaryen's `wasm-merge`
+and `wasm-opt`) on your `PATH`.
 
-| | `/` | `/helper` |
-|---|---|---|
-| Node, native `ssr` | 9 ms | 9 ms |
-| Node, native `ssr` with [`reuseWindow`](https://stenciljs.com/docs/ssr#reusewindow) | 4 ms | 4 ms |
-| `ssr-wasm` on wasmtime (every example except Go) | 36–47 ms | 42–56 ms |
-| `ssr-wasm` on wazero (Go) | 133 ms | 162 ms |
+```sh
+pnpm install
+pnpm build                                  # builds the component library and its plugin
 
-The plugin runs your components in QuickJS, a JavaScript interpreter compiled to WebAssembly.
-Node runs them on V8, which compiles them to native code. That makes `ssr-wasm` roughly 4–12×
-slower than native SSR on the wasmtime runtimes.
+scripts/docker-build.sh python-django       # build one example's image (or omit the name for all)
+docker run --rm -p 8002:8002 ssr-wasm-python-django
+open http://localhost:8002
+```
 
-That doesn't make it slow. Around 40–60 ms per page on one small CPU fits normal server-rendering
-budgets, and output can be cached like any other template output. `ssr-wasm` is for servers that
-aren't Node. If your server is Node already, use the `ssr` output target.
+The images copy in `packages/components/dist`, so run `pnpm build` first. Each example's README
+also covers running it without Docker. Behind a TLS-inspecting proxy, set
+`EXTRA_CA_CERT=/path/to/proxy-root-ca.pem` before running `scripts/docker-build.sh`.
 
-## Things to know about `ssr-wasm`
+## Working on this repo
 
-Each example's README shows how it handles these:
+Every example serves the same pages, described in [CONTRACT.md](CONTRACT.md), and one test suite
+in [`tests/conformance`](tests/conformance) checks them all: the server HTML, the page with
+JavaScript off, and hydration with JavaScript on.
 
-- **Instances aren't thread-safe.** Compile the plugin once, then give each worker or thread its
-  own instance, or use a pool.
-- **Hydration IDs.** Full-document renders always number them from 1. Fragment renders
-  (`fullDocument: false`) share one counter in the plugin instance, so the fragments of a page
-  never collide. For repeatable output, call `resetSsrDocData` once per request before the first
-  fragment. Never call it between fragments on the same page, or their IDs collide.
-- **Complex props must be attributes.** The plugin only receives HTML, and function options like
-  `beforeSsr` can't cross the JSON boundary. Pass complex props as JSON attributes, and declare
-  them with `@Prop({ serialize: 'json' })` (see `demo-task-list`).
-- **Timers run on a virtual clock.** `setTimeout`, `setInterval`, and `requestAnimationFrame` work
-  during a render, but nothing waits in real time, and a timer due after the render's `timeout`
-  (default 15 s) never fires.
+```sh
+pnpm test                                   # against a minimal Node implementation of CONTRACT.md
+BASE_URL=http://localhost:8002 pnpm test    # against a running example
+scripts/conformance-all.sh                  # every example's image, one after another
+```
+
+To add an example, implement CONTRACT.md, give it the next port, add it to
+`scripts/conformance-all.sh`, and check it with the suite.

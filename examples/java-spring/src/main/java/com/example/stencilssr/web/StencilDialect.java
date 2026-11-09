@@ -5,88 +5,78 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateSpec;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.context.IContext;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.dialect.AbstractProcessorDialect;
 import org.thymeleaf.engine.AttributeName;
-import org.thymeleaf.exceptions.TemplateProcessingException;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.IProcessor;
 import org.thymeleaf.processor.element.AbstractAttributeTagProcessor;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.web.IWebExchange;
+
+import com.example.stencilssr.ssr.SsrRenderer;
 
 /**
- * Helper mode: a Thymeleaf dialect with one attribute, {@code ssr:render}.
+ * Helper mode: a Thymeleaf attribute, {@code ssr:render}, naming a fragment to server-render.
  *
  * <pre>{@code
  * <th:block ssr:render="components :: demo-card"/>
  * }</pre>
  *
- * <p>The value names a Thymeleaf fragment ({@code template :: selector}). The processor
- * renders that fragment with Thymeleaf first, with the page's model, so all the escaping
- * (such as the task JSON in an attribute) is done by the template engine; passes the result to
- * the plugin as a fragment ({@code fullDocument: false}) with the request's handle; and
- * replaces the element with the rendered HTML, unescaped and not processed again.
+ * <p>It renders the fragment with Thymeleaf and the page's model (so the template engine does
+ * the escaping, such as the task JSON in an attribute), passes the result to the plugin with
+ * {@code {"fullDocument": false}}, and replaces the element with the rendered HTML.
+ * Spring Boot adds every dialect bean to its Thymeleaf engine.
  */
+@Component
 public class StencilDialect extends AbstractProcessorDialect {
 
-    public static final String PREFIX = "ssr";
+    /** Request attribute holding the request's plugin handle. {@link SsrFilter} closes it and skips the page. */
+    static final String HANDLE_ATTRIBUTE = SsrRenderer.Handle.class.getName();
 
-    private final SsrRequest ssr;
+    private final SsrRenderer renderer;
 
-    /** @param ssr the request-scoped handle holder (a scoped proxy, so it's safe in a singleton) */
-    public StencilDialect(SsrRequest ssr) {
-        super("Stencil SSR", PREFIX, 1000);
-        this.ssr = ssr;
+    StencilDialect(SsrRenderer renderer) {
+        super("Stencil SSR", "ssr", 1000);
+        this.renderer = renderer;
     }
 
     @Override
-    public Set<IProcessor> getProcessors(String dialectPrefix) {
-        return Set.of(new RenderProcessor(dialectPrefix, ssr));
+    public Set<IProcessor> getProcessors(String prefix) {
+        return Set.of(new AbstractAttributeTagProcessor(TemplateMode.HTML, prefix, null, false, "render", true, 1000, true) {
+            @Override
+            protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName,
+                    String value, IElementTagStructureHandler structureHandler) {
+                structureHandler.replaceWith(render(context, value), false); // false: don't process it again
+            }
+        });
     }
 
-    static final class RenderProcessor extends AbstractAttributeTagProcessor {
+    private String render(ITemplateContext context, String fragment) {
+        IWebExchange exchange = ((IWebContext) context).getExchange();
 
-        private final SsrRequest ssr;
-
-        RenderProcessor(String dialectPrefix, SsrRequest ssr) {
-            super(TemplateMode.HTML, dialectPrefix, null, false, "render", true, 1000, true);
-            this.ssr = ssr;
+        // Render "template :: selector" with the page's variables.
+        String[] spec = fragment.split("::");
+        Map<String, Object> vars = new HashMap<>();
+        for (String name : context.getVariableNames()) {
+            vars.put(name, context.getVariable(name));
         }
+        StringWriter markup = new StringWriter();
+        context.getConfiguration().getTemplateManager().parseAndProcess(
+                new TemplateSpec(spec[0].trim(), Set.of(spec[1].trim()), TemplateMode.HTML, null),
+                new WebContext(exchange, context.getLocale(), vars), markup);
 
-        @Override
-        protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName,
-                String value, IElementTagStructureHandler structureHandler) {
-            String markup = renderFragment(context, value);
-            structureHandler.replaceWith(ssr.renderFragment(markup), false);
+        // The first component on the page acquires the request's handle; later ones reuse it.
+        var handle = (SsrRenderer.Handle) exchange.getAttributeValue(HANDLE_ATTRIBUTE);
+        if (handle == null) {
+            handle = renderer.acquire();
+            exchange.setAttributeValue(HANDLE_ATTRIBUTE, handle);
         }
-
-        /** Renders {@code template :: selector} with the current page's variables. */
-        static String renderFragment(ITemplateContext context, String spec) {
-            int sep = spec.indexOf("::");
-            if (sep < 0) {
-                throw new TemplateProcessingException("ssr:render expects \"template :: selector\", got \"" + spec + "\"");
-            }
-            String template = spec.substring(0, sep).trim();
-            String selector = spec.substring(sep + 2).trim();
-
-            Map<String, Object> vars = new HashMap<>();
-            for (String name : context.getVariableNames()) {
-                vars.put(name, context.getVariable(name));
-            }
-            IContext fragmentContext = context instanceof IWebContext web
-                    ? new WebContext(web.getExchange(), context.getLocale(), vars)
-                    : new Context(context.getLocale(), vars);
-
-            StringWriter out = new StringWriter();
-            context.getConfiguration().getTemplateManager().parseAndProcess(
-                    new TemplateSpec(template, Set.of(selector), TemplateMode.HTML, null), fragmentContext, out);
-            return out.toString().strip();
-        }
+        return handle.renderFragment(markup.toString().strip());
     }
 }

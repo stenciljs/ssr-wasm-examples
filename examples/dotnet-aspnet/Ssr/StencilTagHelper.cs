@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Razor.TagHelpers;
 namespace SsrWasm.Ssr;
 
 /// <summary>
-/// Helper mode: <c>&lt;stencil&gt;…&lt;/stencil&gt;</c> renders its content - one component's
-/// markup, produced and escaped by Razor as usual - with <c>{"fullDocument": false}</c>, and
-/// replaces itself with the result. The rest of the page never goes through the plugin.
+/// Helper mode: <c>&lt;stencil&gt;…&lt;/stencil&gt;</c> renders its content (component markup,
+/// produced by Razor as usual) with <c>{"fullDocument": false}</c> and replaces itself with the
+/// result. The rest of the page never goes through the plugin.
 /// </summary>
 /// <example>
 /// <code>
@@ -27,6 +27,6 @@ public sealed class StencilTagHelper(SsrHandle ssr) : TagHelper
         var markup = content.GetContent().Trim();
 
         output.TagName = null; // emit only the content, not a <stencil> element
-        output.Content.SetHtmlContent(await ssr.RenderAsync(markup, SsrOptions.Fragment));
+        output.Content.SetHtmlContent(await ssr.RenderAsync(markup, fragment: true));
     }
 }

@@ -49,9 +49,7 @@ COPY --chown=app:app packages/components/dist/loader-bundle/demo-components/ ste
 # 6 MB of wasm.
 RUN php -d ffi.enable=true -r 'require "vendor/extism/extism/src/Internal/LibExtism.php"; \
       spl_autoload_register(fn ($c) => require "vendor/extism/extism/src/".str_replace(["Extism\\", "\\"], ["", "/"], $c).".php"); \
-      $t = hrtime(true); \
-      new Extism\Plugin(new Extism\Manifest(new Extism\Manifest\PathWasmSource(getenv("SSR_WASM_PATH"))), true); \
-      printf("ssr-wasm plugin compiled in %.0f ms\n", (hrtime(true) - $t) / 1e6);'
+      new Extism\Plugin(new Extism\Manifest(new Extism\Manifest\PathWasmSource(getenv("SSR_WASM_PATH"))), true);'
 
 # The app itself.
 COPY --chown=app:app examples/php-laravel/ ./
