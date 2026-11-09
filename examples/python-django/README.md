@@ -3,6 +3,10 @@
 A Django app that server-renders the demo components by loading the `ssr-wasm` plugin with the
 [Extism Python SDK](https://pypi.org/project/extism/). Runs on port 8002.
 
+![Python / Django: the demo page, server-rendered by this example](../../docs/screenshots/python-django.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 ### Docker

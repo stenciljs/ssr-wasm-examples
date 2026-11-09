@@ -4,6 +4,10 @@ A Laravel 13 app (PHP 8.4, Octane on FrankenPHP) that server-renders the demo co
 the [Extism PHP SDK](https://github.com/extism/php-sdk) (`extism/extism`, which uses PHP's FFI
 extension and `libextism`). Runs on port 8001.
 
+![PHP / Laravel: the demo page, server-rendered by this example](../../docs/screenshots/php-laravel.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 With Docker, building from the repo root:

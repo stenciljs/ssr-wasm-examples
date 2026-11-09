@@ -62,8 +62,8 @@ export namespace Components {
     /**
      * Shadow DOM, a complex (array) prop, and nested Stencil components (`demo-badge`).
      * The ssr-wasm plugin can only receive HTML, so complex data has to arrive as an attribute
-     * string. `@AttrDeserialize` turns the `tasks` attribute's JSON into the array; on the client
-     * the property can also be set directly.
+     * string. `serialize: 'json'` parses the `tasks` attribute's JSON into the array (and carries the
+     * value to the browser in the attribute); on the client the property can also be set directly.
      */
     interface DemoTaskList {
         /**
@@ -131,8 +131,8 @@ declare global {
     /**
      * Shadow DOM, a complex (array) prop, and nested Stencil components (`demo-badge`).
      * The ssr-wasm plugin can only receive HTML, so complex data has to arrive as an attribute
-     * string. `@AttrDeserialize` turns the `tasks` attribute's JSON into the array; on the client
-     * the property can also be set directly.
+     * string. `serialize: 'json'` parses the `tasks` attribute's JSON into the array (and carries the
+     * value to the browser in the attribute); on the client the property can also be set directly.
      */
     interface HTMLDemoTaskListElement extends Components.DemoTaskList, HTMLStencilElement {
     }
@@ -208,8 +208,8 @@ declare namespace LocalJSX {
     /**
      * Shadow DOM, a complex (array) prop, and nested Stencil components (`demo-badge`).
      * The ssr-wasm plugin can only receive HTML, so complex data has to arrive as an attribute
-     * string. `@AttrDeserialize` turns the `tasks` attribute's JSON into the array; on the client
-     * the property can also be set directly.
+     * string. `serialize: 'json'` parses the `tasks` attribute's JSON into the array (and carries the
+     * value to the browser in the attribute); on the client the property can also be set directly.
      */
     interface DemoTaskList {
         /**
@@ -271,8 +271,8 @@ declare module "@stencil/core" {
             /**
              * Shadow DOM, a complex (array) prop, and nested Stencil components (`demo-badge`).
              * The ssr-wasm plugin can only receive HTML, so complex data has to arrive as an attribute
-             * string. `@AttrDeserialize` turns the `tasks` attribute's JSON into the array; on the client
-             * the property can also be set directly.
+             * string. `serialize: 'json'` parses the `tasks` attribute's JSON into the array (and carries the
+             * value to the browser in the attribute); on the client the property can also be set directly.
              */
             "demo-task-list": LocalJSX.IntrinsicElements["demo-task-list"] & JSXBase.HTMLAttributes<HTMLDemoTaskListElement>;
         }

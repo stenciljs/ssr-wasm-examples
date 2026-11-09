@@ -4,6 +4,10 @@ Server-renders the demo components from Go using only the standard library (`net
 `html/template`) and the pure-Go [Extism SDK](https://github.com/extism/go-sdk), which runs the
 plugin on [wazero](https://wazero.io). No cgo, so the result is one static binary. Port 8004.
 
+![Go / net/http: the demo page, server-rendered by this example](../../docs/screenshots/go-nethttp.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 ### Docker

@@ -4,6 +4,10 @@ Server-renders the Stencil components from ASP.NET Core with Razor Pages, using 
 [Extism .NET SDK](https://github.com/extism/dotnet-sdk) (`Extism.Sdk` plus an `Extism.runtime.*`
 package for the native `libextism`, which runs the plugin on wasmtime). Runs on port 8007.
 
+![C# / ASP.NET Core: the demo page, server-rendered by this example](../../docs/screenshots/dotnet-aspnet.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 ### Docker

@@ -4,6 +4,10 @@ A minimal Rails 8.1 app (Ruby 3.4, Puma, no database or asset pipeline) that ser
 Stencil components with the `ssr-wasm` plugin, using the
 [Extism Ruby SDK](https://github.com/extism/ruby-sdk). It runs on port 8003.
 
+![Ruby / Rails: the demo page, server-rendered by this example](../../docs/screenshots/ruby-rails.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 ### Docker

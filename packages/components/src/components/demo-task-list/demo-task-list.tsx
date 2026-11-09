@@ -1,4 +1,4 @@
-import { AttrDeserialize, Component, Prop, h } from '@stencil/core';
+import { Component, Prop, h } from '@stencil/core';
 
 export interface DemoTask {
   title: string;
@@ -9,8 +9,8 @@ export interface DemoTask {
  * Shadow DOM, a complex (array) prop, and nested Stencil components (`demo-badge`).
  *
  * The ssr-wasm plugin can only receive HTML, so complex data has to arrive as an attribute
- * string. `@AttrDeserialize` turns the `tasks` attribute's JSON into the array; on the client
- * the property can also be set directly.
+ * string. `serialize: 'json'` parses the `tasks` attribute's JSON into the array (and carries the
+ * value to the browser in the attribute); on the client the property can also be set directly.
  */
 @Component({
   tag: 'demo-task-list',
@@ -19,20 +19,10 @@ export interface DemoTask {
 })
 export class DemoTaskList {
   /** The tasks. As an attribute, a JSON array. */
-  @Prop() tasks: DemoTask[] = [];
-
-  @AttrDeserialize('tasks')
-  deserializeTasks(value: string): DemoTask[] {
-    try {
-      const json = JSON.parse(value);
-      return Array.isArray(json) ? json : [];
-    } catch {
-      return [];
-    }
-  }
+  @Prop({ serialize: 'json' }) tasks: DemoTask[] = [];
 
   render() {
-    const tasks = this.tasks ?? [];
+    const tasks = Array.isArray(this.tasks) ? this.tasks : [];
     const remaining = tasks.filter((t) => !t.done).length;
     return (
       <section>

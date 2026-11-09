@@ -167,8 +167,8 @@ Each example's README shows how it handles these:
   never collide. For repeatable output, call `resetSsrDocData` once per request before the first
   fragment. Never call it between fragments on the same page, or their IDs collide.
 - **Complex props must be attributes.** The plugin only receives HTML, and function options like
-  `beforeSsr` can't cross the JSON boundary. Pass complex props as JSON attributes, and convert
-  them in the component with `@AttrDeserialize()` (see `demo-task-list`).
+  `beforeSsr` can't cross the JSON boundary. Pass complex props as JSON attributes, and declare
+  them with `@Prop({ serialize: 'json' })` (see `demo-task-list`).
 - **Timers run on a virtual clock.** `setTimeout`, `setInterval`, and `requestAnimationFrame` work
   during a render, but nothing waits in real time, and a timer due after the render's `timeout`
   (default 15 s) never fires.

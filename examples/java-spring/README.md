@@ -4,6 +4,10 @@ Spring Boot 4 (Spring MVC + Thymeleaf) app that server-renders the demo componen
 [Extism Java SDK](https://github.com/extism/java-sdk) (`org.extism.sdk:extism`), which calls
 `libextism` (wasmtime) over JNA. Runs on port 8006.
 
+![Java / Spring Boot: the demo page, server-rendered by this example](../../docs/screenshots/java-spring.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 ### Docker

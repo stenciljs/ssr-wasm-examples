@@ -5,6 +5,10 @@ The demo app in Rust, using [Axum](https://github.com/tokio-rs/axum) and
 [Extism Rust SDK](https://github.com/extism/extism/tree/main/runtime) (wasmtime) and builds to a
 single binary. Port **8005**.
 
+![Rust / Axum: the demo page, server-rendered by this example](../../docs/screenshots/rust-axum.png)
+
+The demo page as this example's server sends it, with JavaScript disabled in the browser.
+
 ## Run it
 
 ### Docker
